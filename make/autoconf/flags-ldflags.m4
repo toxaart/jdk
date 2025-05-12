@@ -66,13 +66,13 @@ AC_DEFUN([FLAGS_SETUP_LDFLAGS_HELPER],
 
   elif test "x$TOOLCHAIN_TYPE" = xclang; then
     BASIC_LDFLAGS_JVM_ONLY="-mno-omit-leaf-frame-pointer -mstack-alignment=16 \
-        -fPIC"
+        -fPIC "
 
     LDFLAGS_CXX_PARTIAL_LINKING="$MACHINE_FLAG -r"
 
     if test "x$OPENJDK_TARGET_OS" = xlinux; then
       # Clang needs the lld linker to work correctly
-      BASIC_LDFLAGS="-fuse-ld=lld -Wl,--exclude-libs,ALL"
+      BASIC_LDFLAGS="-fuse-ld=lld -fsanitize=memory -fsanitize-memory-track-origins -fno-sanitize-memory-param-retval"
       if test "x$CXX_IS_USER_SUPPLIED" = xfalse && test "x$CC_IS_USER_SUPPLIED" = xfalse; then
         UTIL_REQUIRE_PROGS(LLD, lld, $TOOLCHAIN_PATH:$PATH)
       fi
