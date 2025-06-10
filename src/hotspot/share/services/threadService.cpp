@@ -740,6 +740,9 @@ bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
         break;
       }
     }
+    if (found) {
+      break; // this will return immediately once found, no need to iterate further
+    }
   }
   return found;
 }
