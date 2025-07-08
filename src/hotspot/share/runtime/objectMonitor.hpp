@@ -377,7 +377,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   bool      enter(JavaThread* current);
   bool      try_enter(JavaThread* current, bool check_for_recursion = true);
   bool      spin_enter(JavaThread* current);
-  void      enter_with_contention_mark(JavaThread* current, ObjectMonitorContentionMark& contention_mark);
+  void      enter_with_contention_mark(JavaThread* current);
   void      exit(JavaThread* current, bool not_suspended = true);
   bool      resume_operation(JavaThread* current, ObjectWaiter* node, ContinuationWrapper& cont);
   void      wait(jlong millis, bool interruptible, TRAPS);
@@ -402,7 +402,10 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   ObjectWaiter* dequeue_waiter();
   void      dequeue_specific_waiter(ObjectWaiter* waiter);
   void      enter_internal(JavaThread* current);
+  void      enter_internal_self_park(JavaThread* current, bool do_timed_parked);
   void      reenter_internal(JavaThread* current, ObjectWaiter* current_node);
+  void      reenter_internal_self_park(JavaThread* current);
+  void      enter_or_reenter_internal(JavaThread* current, ObjectWaiter* current_node = nullptr);
   void      entry_list_build_dll(JavaThread* current);
   void      unlink_after_acquire(JavaThread* current, ObjectWaiter* current_node);
   ObjectWaiter* entry_list_tail(JavaThread* current);

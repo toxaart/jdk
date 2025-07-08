@@ -1153,7 +1153,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
   object = nullptr;
 
   if (current == locking_thread) {
-    monitor->enter_with_contention_mark(locking_thread, contention_mark);
+    monitor->enter_with_contention_mark(locking_thread);
   } else {
     monitor->enter_for_with_contention_mark(locking_thread, contention_mark);
   }
