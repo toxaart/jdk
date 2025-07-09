@@ -201,8 +201,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
                                     // ObjectMonitor::deflate_monitor().
 
   ObjectWaiter* volatile _wait_set; // LL of threads waiting on the monitor - wait()
-  volatile int  _waiters;           // number of waiting threads
-  volatile int _wait_set_lock;      // protects wait set queue - simple spinlock
+  volatile int  _waiters;           // number of waiting threads     
+  Mutex* volatile _wait_set_lock;   // protects wait set queue 
 
   // Used in LM_LEGACY mode to store BasicLock* in case of inflation by contending thread.
   BasicLock* volatile _stack_locker;
