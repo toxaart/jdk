@@ -116,6 +116,7 @@ Monitor* Notification_lock            = nullptr;
 Monitor* PeriodicTask_lock            = nullptr;
 Monitor* RedefineClasses_lock         = nullptr;
 Mutex*   Verify_lock                  = nullptr;
+Mutex*   ObjectMonitorWaitSet_lock    = nullptr;
 
 #if INCLUDE_JFR
 Mutex*   JfrStacktrace_lock           = nullptr;
@@ -280,6 +281,7 @@ void mutex_init() {
   MUTEX_DEFN(RedefineClasses_lock            , PaddedMonitor, safepoint);
   MUTEX_DEFN(Verify_lock                     , PaddedMutex  , safepoint);
   MUTEX_DEFN(ClassLoaderDataGraph_lock       , PaddedMutex  , safepoint);
+  MUTEX_DEFN(ObjectMonitorWaitSet_lock       , PaddedMutex  , nosafepoint);
 
   if (WhiteBoxAPI) {
     MUTEX_DEFN(Compilation_lock              , PaddedMonitor, nosafepoint);
