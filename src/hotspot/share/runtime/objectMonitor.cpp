@@ -2624,7 +2624,7 @@ void ObjectMonitor::print_debug_style_on(outputStream* st) const {
   st->print_cr("  _contentions = %d", contentions());
   st->print_cr("  _wait_set = " INTPTR_FORMAT, p2i(_wait_set));
   st->print_cr("  _waiters = %d", _waiters);
-  st->print_cr("  _wait_set_lock = " INTPTR_FORMAT, _wait_set_lock);
+  st->print_cr("  _wait_set_lock = %p", _wait_set_lock);
   st->print_cr("}");
 }
 #endif
