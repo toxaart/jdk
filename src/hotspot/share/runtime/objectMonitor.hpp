@@ -378,17 +378,16 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   template<typename ProcIn = void(JavaThread*), typename ProcPost = void(JavaThread*)>
    class EnterInternalHelper {
    private:
-     bool fast_track(JavaThread* current, ObjectWaiter *node);
-     void checks(JavaThread* current);
-     void loop(JavaThread* current, ObjectWaiter* node, int& recheck_interval, bool do_timed_parked);
-     void egress(JavaThread* current, ObjectWaiter* node);
-     void loop_and_egress(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post, int& recheck_interval, bool do_timed_parked);
-     void park(JavaThread* current, int& recheck_interval, bool do_timed_parked);
+     bool fast_track(JavaThread* current, ObjectWaiter *node) const;
+     void loop(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, int& recheck_interval, bool do_timed_parked) const;
+     void egress(JavaThread* current, ObjectWaiter* node) const;
+     void loop_and_egress(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post, int& recheck_interval, bool do_timed_parked) const;
+     void park(JavaThread* current, ProcIn* proc_in, int& recheck_interval, bool do_timed_parked) const;
    protected:
      ObjectMonitor* _om;
    public:
      EnterInternalHelper(ObjectMonitor* om) : _om(om) {}
-     void enter_internal(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post);
+     void enter_internal(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post) const;
   };
 
   bool      enter_is_async_deflating();

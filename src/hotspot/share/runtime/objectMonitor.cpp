@@ -341,6 +341,12 @@ void ObjectMonitor::NoOpOnSuspend::operator()(JavaThread* current) {
          ", encoded this=" INTPTR_FORMAT, object()->mark().value(),            \
          markWord::encode(this).value());
 
+#define assert_mark_word_consistency_om()                                                \
+  assert(UseObjectMonitorTable || _om->object()->mark() == markWord::encode(_om),        \
+         "object mark must match encoded this: mark=" INTPTR_FORMAT                      \
+         ", encoded this=" INTPTR_FORMAT, _om->object()->mark().value(),                 \
+         markWord::encode(_om).value());
+
 // -----------------------------------------------------------------------------
 // Enter support
 
@@ -585,14 +591,16 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
 
     assert(current->thread_state() == _thread_in_vm, "invariant");
 
-    EnterInternalHelper<NoOpOnSuspend, ExitOnSuspend> enter_internal_helper(this);
     ObjectWaiter node(current);
+
+    const EnterInternalHelper<NoOpOnSuspend, ExitOnSuspend> enter_internal_helper(this);
+
+    NoOpOnSuspend noos(this);
 
     for (;;) {
       ExitOnSuspend eos(this);
       {
-        //enter_internal(current, eos);
-        enter_internal_helper.enter_internal(current, &node, nullptr, &eos);
+        enter_internal_helper.enter_internal(current, &node, &noos, &eos);
         current->set_current_pending_monitor(nullptr);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
@@ -1165,7 +1173,7 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ClearSuccOnSuspend&cso
 }
 
 template<typename ProcIn, typename ProcPost>
-bool ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::fast_track(JavaThread* current, ObjectWaiter* node) {
+bool ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::fast_track(JavaThread* current, ObjectWaiter* node) const {
   // this fast track is only for the enter path, not for re-enter
   if (std::is_same<ProcPost, ExitOnSuspend>::value) {
     // Try the lock - TATAS
@@ -1216,7 +1224,7 @@ bool ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::fast_track(JavaThread
 }
 
 template<typename ProcIn, typename ProcPost>
-void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::park(JavaThread* current, int& recheck_interval, bool do_timed_parked) {
+void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::park(JavaThread* current, ProcIn* proc_in, int& recheck_interval, bool do_timed_parked) const {
   static int MAX_RECHECK_INTERVAL = 1000;
   // park self
   if (do_timed_parked) {
@@ -1232,8 +1240,26 @@ void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::park(JavaThread* curr
   }
 }
 
+template<>
+void ObjectMonitor::EnterInternalHelper<ObjectMonitor::ClearSuccOnSuspend, ObjectMonitor::NoOpOnSuspend>::park(JavaThread* current,
+                                                                                                                ObjectMonitor::ClearSuccOnSuspend* proc_in,
+                                                                                                                int& recheck_interval,
+                                                                                                                bool do_timed_parked) const {
+  // Specific case for the re-enter path. This is due to a different nature of processing:
+  // ClearSuccOnSuspend does not require ownership, but one has to go to _thread_in_vm state
+  // and check for the safepoint. 
+  OSThreadContendState osts(current->osthread());
+  current->_ParkEvent->park();
+  current->set_thread_state_fence(_thread_in_vm);
+  if (SafepointMechanism::should_process(current, true)) {
+    proc_in->operator()(current);
+    SafepointMechanism::process_if_requested(current, true, false /* check_async_exception */);
+  }
+  ThreadStateTransition::transition_from_vm(current, _thread_blocked);
+}
+
 template<typename ProcIn, typename ProcPost>
-void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::loop(JavaThread* current, ObjectWaiter* node, int& recheck_interval, bool do_timed_parked) {
+void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::loop(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, int& recheck_interval, bool do_timed_parked) const {
   for (;;) {
 
     ObjectWaiter::TStates v = node->TState;
@@ -1250,7 +1276,7 @@ void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::loop(JavaThread* curr
       break;
     }
 
-    park(current, recheck_interval, do_timed_parked);
+    park(current, proc_in, recheck_interval, do_timed_parked);
 
     if (_om->try_lock(current) == TryLockResult::Success) {
       break;
@@ -1280,7 +1306,7 @@ void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::loop(JavaThread* curr
 }
 
 template<typename ProcIn, typename ProcPost>
-void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::egress(JavaThread* current, ObjectWaiter* node) {
+void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::egress(JavaThread* current, ObjectWaiter* node) const {
   // Egress :
   // Current has acquired the lock -- Unlink current from the _entry_list.
   _om->unlink_after_acquire(current, node);
@@ -1315,30 +1341,62 @@ void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::egress(JavaThread* cu
   return;
 }
 
+template<>
+void ObjectMonitor::EnterInternalHelper<ObjectMonitor::ClearSuccOnSuspend, ObjectMonitor::NoOpOnSuspend>::egress(JavaThread* current, ObjectWaiter* node) const {
+  // Current has acquired the lock -- Unlink current from the _entry_list.
+  assert(_om->has_owner(current), "invariant");
+  assert_mark_word_consistency_om();
+  _om->unlink_after_acquire(current, node);
+  if (_om->has_successor(current)) _om->clear_successor();
+  assert(!_om->has_successor(current), "invariant");
+  node->TState = ObjectWaiter::TS_RUN;
+  OrderAccess::fence();      // see comments at the end of egress for the enter path above
+}
+
 template<typename ProcIn, typename ProcPost>
 void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::loop_and_egress(JavaThread* current,
                                                                             ObjectWaiter* node,
                                                                             ProcIn* proc_in,
                                                                             ProcPost* proc_post,
                                                                             int& recheck_interval,
-                                                                            bool do_timed_parked) {
+                                                                            bool do_timed_parked) const {
   // In the default case, i.e. the enter path, the thread should be in the blocked state untill egress is done
   ThreadBlockInVMPreprocess<ProcPost> tbivs(current, *proc_post, true /* allow_suspend */);
+  loop(current, node, proc_in, recheck_interval, do_timed_parked);
+  egress(current, node);
+}
 
-  loop(current, node, recheck_interval, do_timed_parked);
-
+template<>
+void ObjectMonitor::EnterInternalHelper<ObjectMonitor::ClearSuccOnSuspend, ObjectMonitor::NoOpOnSuspend>::loop_and_egress(JavaThread* current,
+                                                                                                                          ObjectWaiter* node,
+                                                                                                                          ObjectMonitor::ClearSuccOnSuspend* proc_in,
+                                                                                                                          ObjectMonitor::NoOpOnSuspend* proc_post,
+                                                                                                                          int& recheck_interval,
+                                                                                                                          bool do_timed_parked) const {
+  // Tailored case for re-enter path, i.e. ClearSuccOnSuspend in the loop
+  {
+    ThreadBlockInVMPreprocess<NoOpOnSuspend> tbivs(current, *proc_post, true /* allow_suspend */);
+    loop(current, node, proc_in, recheck_interval, do_timed_parked);
+  }
+  // Thread is back to _thread_in_vm state.
   egress(current, node);
 }
 
 template<typename ProcIn, typename ProcPost>
-void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::enter_internal(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post) {
-
+void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::enter_internal(JavaThread* current, ObjectWaiter* node, ProcIn* proc_in, ProcPost* proc_post) const {
+  assert(current != nullptr, "invariant");
   assert(current->thread_state() != _thread_blocked, "invariant");
+  assert(node != nullptr, "invariant");
+  assert(node->_thread == current, "invariant");
+
+  if (std::is_same<ProcIn, ClearSuccOnSuspend>::value) {
+    assert(_om->_waiters > 0, "invariant");
+    assert_mark_word_consistency_om();
+  }
 
   if (fast_track(current, node)) {
     return;
   }
-
 
   // The lock might have been released while this thread was occupied queueing
   // itself onto _entry_list.  To close the race and avoid "stranding" and
@@ -1365,7 +1423,6 @@ void ObjectMonitor::EnterInternalHelper<ProcIn, ProcPost>::enter_internal(JavaTh
   }
 
   loop_and_egress(current, node, proc_in, proc_post, recheck_interval, do_timed_parked);
-
 }
 
 // This method is called from two places:
@@ -2156,7 +2213,9 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     } else {
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
       ClearSuccOnSuspend csos(this);
-      reenter_internal(current, csos, &node);
+      NoOpOnSuspend noos(this);
+      const EnterInternalHelper<ClearSuccOnSuspend, NoOpOnSuspend> enter_internal_helper(this);
+      enter_internal_helper.enter_internal(current, &node, &csos, &noos);
       node.wait_reenter_end(this);
     }
 
