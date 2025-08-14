@@ -609,7 +609,7 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
         break;
       }
 #endif
-      if (enter_internal_wrapper(current, &node, true, false)) {
+      if (enter_internal_wrapper(current, &node, true)) {
         break;
       }
     }
@@ -941,12 +941,12 @@ const char* ObjectMonitor::is_busy_to_string(stringStream* ss) {
   return ss->base();
 }
 
-bool ObjectMonitor::enter_internal_wrapper(JavaThread* current, ObjectWaiter* node, bool allow_fast_track, bool allow_suspend_in_loop) {
+bool ObjectMonitor::enter_internal_wrapper(JavaThread* current, ObjectWaiter* node, bool is_enter) {
   ExitOnSuspend eos(this);
   {
     assert_mark_word_consistency();
     ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
-    enter_internal(current, node, allow_fast_track, allow_suspend_in_loop);
+    enter_internal(current, node, is_enter);
     current->set_current_pending_monitor(nullptr);
     // We can go to a safepoint at the end of this block. If we
     // do a thread dump during that safepoint, then this thread will show
@@ -968,10 +968,10 @@ bool ObjectMonitor::enter_internal_wrapper(JavaThread* current, ObjectWaiter* no
   return false;
 }
 
-void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool allow_fast_track, bool allow_suspend_in_loop) {
+void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool is_enter) {
   assert(current->thread_state() == _thread_blocked, "invariant");
 
-  if (allow_fast_track) {
+  if (is_enter) {
     // Try the lock - TATAS
     if (try_lock(current) == TryLockResult::Success) {
       assert(!has_successor(current), "invariant");
@@ -1051,9 +1051,7 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool
     }
     assert(!has_owner(current), "invariant");
 
-    {
-      OSThreadContendState osts(current->osthread());
-
+    if (is_enter) {
       // park self
       if (do_timed_parked) {
         current->_ParkEvent->park((jlong)recheck_interval);
@@ -1062,21 +1060,25 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool
         if (recheck_interval > MAX_RECHECK_INTERVAL) {
           recheck_interval = MAX_RECHECK_INTERVAL;
         }
-      }
-      else {
+      } else {
         current->_ParkEvent->park();
       }
+    } else {
+      // Program flow came here from wait(), i.e. it is the re-entering path.
+      OSThreadContendState osts(current->osthread());
+
+      current->_ParkEvent->park();
 
       current->set_thread_state_fence(_thread_in_vm);
 
-      if (SafepointMechanism::should_process(current, allow_suspend_in_loop)) {
+      if (SafepointMechanism::should_process(current, true)) {
         csos.operator()(current);
-        SafepointMechanism::process_if_requested(current, allow_suspend_in_loop, false /* check_async_exception */);
+        SafepointMechanism::process_if_requested(current, true, false /* check_async_exception */);
       }
 
       ThreadStateTransition::transition_from_vm(current, _thread_blocked);
-
     }
+
 
     if (try_lock(current) == TryLockResult::Success) {
       break;
@@ -1996,7 +1998,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     } else {
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
       //reenter_internal(current, &node);
-      enter_internal_wrapper(current, &node, false, true);
+      enter_internal_wrapper(current, &node, false);
       node.wait_reenter_end(this);
     }
 
