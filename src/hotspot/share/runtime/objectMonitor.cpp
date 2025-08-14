@@ -584,31 +584,6 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
     ObjectWaiter node(current);
 
     for (;;) {
-#if 0      
-      ExitOnSuspend eos(this);
-      {
-        assert_mark_word_consistency();
-
-        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
-        enter_internal(current, false);
-        current->set_current_pending_monitor(nullptr);
-        // We can go to a safepoint at the end of this block. If we
-        // do a thread dump during that safepoint, then this thread will show
-        // as having "-locked" the monitor, but the OS and java.lang.Thread
-        // states will still report that the thread is blocked trying to
-        // acquire it.
-        // If there is a suspend request, ExitOnSuspend will exit the OM
-        // and set the OM as pending.
-      }
-      if (!eos.exited()) {
-        // ExitOnSuspend did not exit the OM
-        assert(has_owner(current), "invariant");
-        assert_mark_word_consistency();
-        assert(!has_successor(current), "invariant");
-        OrderAccess::fence();      // see comments at the end of enter_internal()
-        break;
-      }
-#endif
       if (enter_internal_wrapper(current, &node, true)) {
         break;
       }
@@ -1153,76 +1128,6 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool
   // monitorexit.
 
   return;
-}
-
-// reenter_internal() is a specialized inline form of the latter half of the
-// contended slow-path from enter_internal().  We use reenter_internal() only for
-// monitor reentry in wait().
-//
-// In the future we should reconcile enter_internal() and reenter_internal().
-
-void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentNode) {
-  assert(current != nullptr, "invariant");
-  assert(current->thread_state() != _thread_blocked, "invariant");
-  assert(currentNode != nullptr, "invariant");
-  assert(currentNode->_thread == current, "invariant");
-  assert(_waiters > 0, "invariant");
-  assert_mark_word_consistency();
-
-  for (;;) {
-    ObjectWaiter::TStates v = currentNode->TState;
-    guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
-    assert(!has_owner(current), "invariant");
-
-    // This thread has been notified so try to reacquire the lock.
-    if (try_lock(current) == TryLockResult::Success) {
-      break;
-    }
-
-    // If that fails, spin again.  Note that spin count may be zero so the above TryLock
-    // is necessary.
-    if (try_spin(current)) {
-        break;
-    }
-
-    {
-      OSThreadContendState osts(current->osthread());
-
-      assert(current->thread_state() == _thread_in_vm, "invariant");
-
-      {
-        ClearSuccOnSuspend csos(this);
-        ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
-        current->_ParkEvent->park();
-      }
-    }
-
-    // Try again, but just so we distinguish between futile wakeups and
-    // successful wakeups.  The following test isn't algorithmically
-    // necessary, but it helps us maintain sensible statistics.
-    if (try_lock(current) == TryLockResult::Success) {
-      break;
-    }
-
-    // The lock is still contested.
-
-    // Assuming this is not a spurious wakeup we'll normally
-    // find that _succ == current.
-    if (has_successor(current)) clear_successor();
-
-    // Invariant: after clearing _succ a contending thread
-    // *must* retry  _owner before parking.
-    OrderAccess::fence();
-  }
-
-  // Current has acquired the lock -- Unlink current from the _entry_list.
-  assert(has_owner(current), "invariant");
-  assert_mark_word_consistency();
-  unlink_after_acquire(current, currentNode);
-  if (has_successor(current)) clear_successor();
-  assert(!has_successor(current), "invariant");
-  currentNode->TState = ObjectWaiter::TS_RUN;
-  OrderAccess::fence();      // see comments at the end of enter_internal()
 }
 
 // This method is called from two places:
@@ -2012,7 +1917,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       enter(current);
     } else {
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
-      //reenter_internal(current, &node);
       enter_internal_wrapper(current, &node, false);
       node.wait_reenter_end(this);
     }
