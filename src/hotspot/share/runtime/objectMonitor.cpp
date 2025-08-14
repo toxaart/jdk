@@ -942,22 +942,37 @@ const char* ObjectMonitor::is_busy_to_string(stringStream* ss) {
 }
 
 bool ObjectMonitor::enter_internal_wrapper(JavaThread* current, ObjectWaiter* node, bool is_enter) {
-  ExitOnSuspend eos(this);
-  {
+  if (is_enter) {
+    ExitOnSuspend eos(this);
+    {
+      assert_mark_word_consistency();
+      ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
+      enter_internal(current, node, is_enter);
+      current->set_current_pending_monitor(nullptr);
+      // We can go to a safepoint at the end of this block. If we
+      // do a thread dump during that safepoint, then this thread will show
+      // as having "-locked" the monitor, but the OS and java.lang.Thread
+      // states will still report that the thread is blocked trying to
+      // acquire it.
+      // If there is a suspend request, ExitOnSuspend will exit the OM
+      // and set the OM as pending.
+    }
+    if (!eos.exited()) {
+      // ExitOnSuspend did not exit the OM, the current thread owns it
+      assert(has_owner(current), "invariant");
+      assert_mark_word_consistency();
+      assert(!has_successor(current), "invariant");
+      node->TState = ObjectWaiter::TS_RUN;
+      OrderAccess::fence();      // see comments at the end of enter_internal()
+      return true;
+    }
+    return false;
+  } else {   
     assert_mark_word_consistency();
-    ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
-    enter_internal(current, node, is_enter);
-    current->set_current_pending_monitor(nullptr);
-    // We can go to a safepoint at the end of this block. If we
-    // do a thread dump during that safepoint, then this thread will show
-    // as having "-locked" the monitor, but the OS and java.lang.Thread
-    // states will still report that the thread is blocked trying to
-    // acquire it.
-    // If there is a suspend request, ExitOnSuspend will exit the OM
-    // and set the OM as pending.
-  }
-  if (!eos.exited()) {
-    // ExitOnSuspend did not exit the OM
+    {
+      ThreadBlockInVM tbivs(current, true /* allow_suspend */);
+      enter_internal(current, node, is_enter);
+    }
     assert(has_owner(current), "invariant");
     assert_mark_word_consistency();
     assert(!has_successor(current), "invariant");
@@ -965,12 +980,12 @@ bool ObjectMonitor::enter_internal_wrapper(JavaThread* current, ObjectWaiter* no
     OrderAccess::fence();      // see comments at the end of enter_internal()
     return true;
   }
-  return false;
 }
 
 void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool is_enter) {
   assert(current->thread_state() == _thread_blocked, "invariant");
 
+  // If the flow came from enter(), one tries the fast track
   if (is_enter) {
     // Try the lock - TATAS
     if (try_lock(current) == TryLockResult::Success) {
