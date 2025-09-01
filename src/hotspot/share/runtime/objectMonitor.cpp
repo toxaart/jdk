@@ -581,11 +581,13 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
 
     assert(current->thread_state() == _thread_in_vm, "invariant");
 
+    ObjectWaiter node(current);
+
     for (;;) {
       ExitOnSuspend eos(this);
       {
         ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
-        enter_internal(current);
+        enter_internal(current, &node);
         current->set_current_pending_monitor(nullptr);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
@@ -928,49 +930,56 @@ const char* ObjectMonitor::is_busy_to_string(stringStream* ss) {
   return ss->base();
 }
 
-void ObjectMonitor::enter_internal(JavaThread* current) {
+void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* node, bool do_reenter) {
+  assert(current != nullptr, "invariant");
   assert(current->thread_state() == _thread_blocked, "invariant");
-
-  // Try the lock - TATAS
-  if (try_lock(current) == TryLockResult::Success) {
-    assert(!has_successor(current), "invariant");
-    assert(has_owner(current), "invariant");
-    return;
+  assert(node != nullptr, "invariant");
+  assert(node->_thread == current, "invariant");
+  if (do_reenter) {
+    assert(_waiters > 0, "invariant");
   }
 
-  assert(InitDone, "Unexpectedly not initialized");
+  if (!do_reenter) {
+    // Try the lock - TATAS
+    if (try_lock(current) == TryLockResult::Success) {
+      assert(!has_successor(current), "invariant");
+      assert(has_owner(current), "invariant");
+      return;
+    }
 
-  // We try one round of spinning *before* enqueueing current.
-  //
-  // If the _owner is ready but OFFPROC we could use a YieldTo()
-  // operation to donate the remainder of this thread's quantum
-  // to the owner.  This has subtle but beneficial affinity
-  // effects.
+    assert(InitDone, "Unexpectedly not initialized");
 
-  if (try_spin(current)) {
-    assert(has_owner(current), "invariant");
+    // We try one round of spinning *before* enqueueing current.
+    //
+    // If the _owner is ready but OFFPROC we could use a YieldTo()
+    // operation to donate the remainder of this thread's quantum
+    // to the owner.  This has subtle but beneficial affinity
+    // effects.
+
+    if (try_spin(current)) {
+      assert(has_owner(current), "invariant");
+      assert(!has_successor(current), "invariant");
+      return;
+    }
+
+    // The Spin failed -- Enqueue and park the thread ...
     assert(!has_successor(current), "invariant");
-    return;
-  }
+    assert(!has_owner(current), "invariant");
 
-  // The Spin failed -- Enqueue and park the thread ...
-  assert(!has_successor(current), "invariant");
-  assert(!has_owner(current), "invariant");
+    // Enqueue "current" on ObjectMonitor's _entry_list.
+    //
+    // Node acts as a proxy for current.
+    // As an aside, if were to ever rewrite the synchronization code mostly
+    // in Java, WaitNodes, ObjectMonitors, and Events would become 1st-class
+    // Java objects.  This would avoid awkward lifecycle and liveness issues,
+    // as well as eliminate a subset of ABA issues.
+    // TODO: eliminate ObjectWaiter and enqueue either Threads or Events.
 
-  // Enqueue "current" on ObjectMonitor's _entry_list.
-  //
-  // Node acts as a proxy for current.
-  // As an aside, if were to ever rewrite the synchronization code mostly
-  // in Java, WaitNodes, ObjectMonitors, and Events would become 1st-class
-  // Java objects.  This would avoid awkward lifecycle and liveness issues,
-  // as well as eliminate a subset of ABA issues.
-  // TODO: eliminate ObjectWaiter and enqueue either Threads or Events.
+    current->_ParkEvent->reset();
 
-  ObjectWaiter node(current);
-  current->_ParkEvent->reset();
-
-  if (try_lock_or_add_to_entry_list(current, &node)) {
-    return; // We got the lock.
+    if (try_lock_or_add_to_entry_list(current, node)) {
+      return; // We got the lock.
+    }
   }
   // This thread is now added to the _entry_list.
 
@@ -1000,22 +1009,28 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
   }
 
   for (;;) {
+    ObjectWaiter::TStates v = node->TState;
+    guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
 
     if (try_lock(current) == TryLockResult::Success) {
       break;
     }
     assert(!has_owner(current), "invariant");
 
-    // park self
-    if (do_timed_parked) {
-      current->_ParkEvent->park((jlong) recheck_interval);
-      // Increase the recheck_interval, but clamp the value.
-      recheck_interval *= 8;
-      if (recheck_interval > MAX_RECHECK_INTERVAL) {
-        recheck_interval = MAX_RECHECK_INTERVAL;
+    {
+      OSThreadContendState osts(current->osthread());
+      // park self
+      if (!do_reenter && do_timed_parked) {
+        current->_ParkEvent->park((jlong)recheck_interval);
+        // Increase the recheck_interval, but clamp the value.
+        recheck_interval *= 8;
+        if (recheck_interval > MAX_RECHECK_INTERVAL) {
+          recheck_interval = MAX_RECHECK_INTERVAL;
+        }
       }
-    } else {
-      current->_ParkEvent->park();
+      else {
+        current->_ParkEvent->park();
+      }
     }
 
     if (try_lock(current) == TryLockResult::Success) {
@@ -1046,13 +1061,14 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
 
   // Egress :
   // Current has acquired the lock -- Unlink current from the _entry_list.
-  unlink_after_acquire(current, &node);
+  assert(has_owner(current), "invariant");
+  unlink_after_acquire(current, node);
   if (has_successor(current)) {
     clear_successor();
     // Note that we don't need to do OrderAccess::fence() after clearing
     // _succ here, since we own the lock.
   }
-
+  assert(!has_successor(current), "invariant");
   // We've acquired ownership with CAS().
   // CAS is serializing -- it has MEMBAR/FENCE-equivalent semantics.
   // But since the CAS() this thread may have also stored into _succ
@@ -1075,68 +1091,11 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
   // the ST of null into _owner in the *subsequent* (following) corresponding
   // monitorexit.
 
-  return;
-}
-
-// reenter_internal() is a specialized inline form of the latter half of the
-// contended slow-path from enter_internal().  We use reenter_internal() only for
-// monitor reentry in wait().
-//
-// In the future we should reconcile enter_internal() and reenter_internal().
-
-void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentNode) {
-  assert(current != nullptr, "invariant");
-  assert(current->thread_state() == _thread_blocked, "invariant");
-  assert(currentNode != nullptr, "invariant");
-  assert(currentNode->_thread == current, "invariant");
-  assert(_waiters > 0, "invariant");
-
-  for (;;) {
-    ObjectWaiter::TStates v = currentNode->TState;
-    guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
-    assert(!has_owner(current), "invariant");
-
-    // This thread has been notified so try to reacquire the lock.
-    if (try_lock(current) == TryLockResult::Success) {
-      break;
-    }
-
-    // If that fails, spin again.  Note that spin count may be zero so the above TryLock
-    // is necessary.
-    if (try_spin(current)) {
-        break;
-    }
-
-    {
-      OSThreadContendState osts(current->osthread());
-      current->_ParkEvent->park();
-    }
-
-    // Try again, but just so we distinguish between futile wakeups and
-    // successful wakeups.  The following test isn't algorithmically
-    // necessary, but it helps us maintain sensible statistics.
-    if (try_lock(current) == TryLockResult::Success) {
-      break;
-    }
-
-    // The lock is still contested.
-
-    // Assuming this is not a spurious wakeup we'll normally
-    // find that _succ == current.
-    if (has_successor(current)) clear_successor();
-
-    // Invariant: after clearing _succ a contending thread
-    // *must* retry  _owner before parking.
-    OrderAccess::fence();
+  if (do_reenter) {
+    node->TState = ObjectWaiter::TS_RUN;
+    OrderAccess::fence();      // see comments above
   }
-
-  // Current has acquired the lock -- Unlink current from the _entry_list.
-  assert(has_owner(current), "invariant");
-  unlink_after_acquire(current, currentNode);
-  if (has_successor(current)) clear_successor();
-  assert(!has_successor(current), "invariant");
-  currentNode->TState = ObjectWaiter::TS_RUN;
-  OrderAccess::fence();      // see comments at the end of enter_internal()
+  return;
 }
 
 // This method is called from two places:
@@ -1929,7 +1888,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       ExitOnSuspend eos(this);
       {
         ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
-        reenter_internal(current, &node);
+        enter_internal(current, &node, true /* do_reenter */);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
         // as having "-locked" the monitor, but the OS and java.lang.Thread
