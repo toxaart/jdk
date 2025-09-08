@@ -956,6 +956,16 @@ void Threads::destroy_vm() {
       nu.wait(0);
   }
 
+  log_info(os)("toxaart N_Monitors_Reached_Spin_Knob_Limit[0]: %d // spin_enter", ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[0]);
+  log_info(os)("toxaart N_Monitors_Reached_Spin_Knob_Limit[1]: %d // enter_internal", ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[1]);
+  log_info(os)("toxaart N_Monitors_Reached_Spin_Knob_Limit[2]: %d // enter_internal", ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[2]);
+  log_info(os)("toxaart N_Monitors_Reached_Spin_Knob_Limit[3]: %d // reenter_internal", ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[3]);
+  log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[0]: %d // spin_enter", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[0]);
+  log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[1]: %d // enter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[1]);
+  log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[2]: %d // enter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[2]);
+  log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[3]: %d // reenter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[3]);
+  log_info(os)("toxaart Knob_MaxPosition: %d", ObjectMonitor::Knob_MaxPosition);
+
   EventShutdown e;
   if (e.should_commit()) {
     e.set_reason("No remaining non-daemon Java threads");
