@@ -213,6 +213,9 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static ParkEvent* vthread_unparker_ParkEvent() { return _vthread_unparker_ParkEvent; }
 
   static int Knob_SpinLimit;
+  static int N_Monitors_Reached_Spin_Knob_Limit[];
+  static int N_Monitors_Not_Reached_Spin_Knob_Limit[];
+  static int Knob_MaxPosition;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }

@@ -475,6 +475,14 @@ bool ObjectMonitor::spin_enter(JavaThread* current) {
     assert(has_owner(current), "must be current: owner=" INT64_FORMAT, owner_raw());
     assert(_recursions == 0, "must be 0: recursions=%zd", _recursions);
     assert_mark_word_consistency();
+    if (this->_SpinDuration >= Knob_SpinLimit) {
+      N_Monitors_Reached_Spin_Knob_Limit[0]++;
+    } else {
+      N_Monitors_Not_Reached_Spin_Knob_Limit[0]++;
+    }
+    if (this->_SpinDuration >= Knob_MaxPosition) {
+      Knob_MaxPosition = this->_SpinDuration;
+    }
     return true;
   }
 
@@ -948,6 +956,14 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
   if (try_spin(current)) {
     assert(has_owner(current), "invariant");
     assert(!has_successor(current), "invariant");
+    if (this->_SpinDuration >= Knob_SpinLimit) {
+      N_Monitors_Reached_Spin_Knob_Limit[1]++;
+    } else {
+      N_Monitors_Not_Reached_Spin_Knob_Limit[1]++;
+    }
+    if (this->_SpinDuration >= Knob_MaxPosition) {
+      Knob_MaxPosition = this->_SpinDuration;
+    }
     return;
   }
 
@@ -1027,6 +1043,15 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
     // try_spin() must tolerate being called with _succ == current.
     // Try yet another round of adaptive spinning.
     if (try_spin(current)) {
+      if (this->_SpinDuration >= Knob_SpinLimit) {
+        N_Monitors_Reached_Spin_Knob_Limit[2]++;
+      }
+      else {
+        N_Monitors_Not_Reached_Spin_Knob_Limit[2]++;
+      }
+      if (this->_SpinDuration >= Knob_MaxPosition) {
+        Knob_MaxPosition = this->_SpinDuration;
+      }
       break;
     }
 
@@ -1103,7 +1128,15 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentN
     // If that fails, spin again.  Note that spin count may be zero so the above TryLock
     // is necessary.
     if (try_spin(current)) {
-        break;
+      if (this->_SpinDuration >= Knob_SpinLimit) {
+        N_Monitors_Reached_Spin_Knob_Limit[3]++;
+      } else {
+        N_Monitors_Not_Reached_Spin_Knob_Limit[3]++;
+      }
+      if (this->_SpinDuration >= Knob_MaxPosition) {
+        Knob_MaxPosition = this->_SpinDuration;
+      }
+      break;
     }
 
     {
@@ -2257,6 +2290,9 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 // not spinning.
 
 int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
+int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
+int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
+int ObjectMonitor::Knob_MaxPosition = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
@@ -2401,7 +2437,9 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
         // If we acquired the lock early in the spin cycle it
         // makes sense to increase _SpinDuration proportionally.
         // Note that we don't clamp SpinDuration precisely at SpinLimit.
-        _SpinDuration = adjust_up(_SpinDuration);
+        if (5 * (_SpinDuration - ctr) < _SpinDuration) {
+          _SpinDuration = adjust_up(_SpinDuration);
+        }
         return true;
       }
 
