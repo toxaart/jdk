@@ -2437,9 +2437,7 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
         // If we acquired the lock early in the spin cycle it
         // makes sense to increase _SpinDuration proportionally.
         // Note that we don't clamp SpinDuration precisely at SpinLimit.
-        if (5 * (_SpinDuration - ctr) < _SpinDuration) {
-          _SpinDuration = adjust_up(_SpinDuration);
-        }
+        _SpinDuration = adjust_up(_SpinDuration);
         return true;
       }
 
