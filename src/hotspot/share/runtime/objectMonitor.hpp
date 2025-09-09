@@ -215,6 +215,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static int Knob_SpinLimit;
   static int N_Monitors_Reached_Spin_Knob_Limit[];
   static int N_Monitors_Not_Reached_Spin_Knob_Limit[];
+  static int MaxContentions[];
   static int Knob_MaxPosition;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }

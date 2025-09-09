@@ -2292,6 +2292,7 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
 int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
 int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
+int ObjectMonitor::MaxContentions[] = { 0, 0, 0, 0 };
 int ObjectMonitor::Knob_MaxPosition = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
@@ -2345,6 +2346,11 @@ bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool a
 
 // Spinning: Fixed frequency (100%), vary duration
 bool ObjectMonitor::try_spin(JavaThread* current) {
+
+  const int ctns = contentions();
+  if (ctns > MaxContentions[0]) {
+    MaxContentions[0] = ctns;
+  }
 
   // Dumb, brutal spin.  Good for comparative measurements against adaptive spinning.
   int knob_fixed_spin = Knob_FixedSpin;  // 0 (don't spin: default), 2000 good test
