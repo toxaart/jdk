@@ -659,6 +659,9 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
 // Callers must compensate as needed.
 
 ObjectMonitor::TryLockResult ObjectMonitor::try_lock(JavaThread* current) {
+
+  TryLockCalls++;
+
   int64_t own = owner_raw();
   int64_t first_own = own;
 
@@ -2292,7 +2295,8 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
 int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
 int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
-int ObjectMonitor::MaxContentions[] = { 0, 0, 0, 0 };
+int ObjectMonitor::MaxContentions = 0;
+long ObjectMonitor::TryLockCalls = 0;
 int ObjectMonitor::Knob_MaxPosition = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
@@ -2348,8 +2352,8 @@ bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool a
 bool ObjectMonitor::try_spin(JavaThread* current) {
 
   const int ctns = contentions();
-  if (ctns > MaxContentions[0]) {
-    MaxContentions[0] = ctns;
+  if (ctns > MaxContentions) {
+    MaxContentions = ctns;
   }
 
   // Dumb, brutal spin.  Good for comparative measurements against adaptive spinning.
