@@ -965,7 +965,7 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[2]: %d // enter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[2]);
   log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[3]: %d // reenter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[3]);
   log_info(os)("toxaart MaxContentions: %d ", ObjectMonitor::MaxContentions);
-  log_info(os)("toxaart TryLockCalls: %d ", ObjectMonitor::TryLockCalls);
+  log_info(os)("toxaart TryLockCalls: %ld ", ObjectMonitor::TryLockCalls);
   log_info(os)("toxaart Knob_MaxPosition: %d", ObjectMonitor::Knob_MaxPosition);
 
   EventShutdown e;
