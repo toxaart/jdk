@@ -965,7 +965,20 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[2]: %d // enter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[2]);
   log_info(os)("toxaart N_Monitors_Not_Reached_Spin_Knob_Limit[3]: %d // reenter_internal", ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[3]);
   log_info(os)("toxaart MaxContentions: %d ", ObjectMonitor::MaxContentions);
-  log_info(os)("toxaart TryLockCalls: %ld ", ObjectMonitor::TryLockCalls);
+  log_info(os)("toxaart TryLockCalls[0]: %ld // exit", ObjectMonitor::TryLockCalls[0]);
+  log_info(os)("toxaart TryLockCalls[1]: %ld // try_lock_or_add_to_entry_list", ObjectMonitor::TryLockCalls[1]);
+  log_info(os)("toxaart TryLockCalls[2]: %ld // enter_internal", ObjectMonitor::TryLockCalls[2]);
+  log_info(os)("toxaart TryLockCalls[3]: %ld // enter_internal", ObjectMonitor::TryLockCalls[3]);
+  log_info(os)("toxaart TryLockCalls[4]: %ld // enter_internal", ObjectMonitor::TryLockCalls[4]);
+  log_info(os)("toxaart TryLockCalls[5]: %ld // reenter_internal", ObjectMonitor::TryLockCalls[5]);
+  log_info(os)("toxaart TryLockCalls[6]: %ld // reenter_internal", ObjectMonitor::TryLockCalls[6]);
+  log_info(os)("toxaart TryLockCalls[7]: %ld // vthread_monitor_enter", ObjectMonitor::TryLockCalls[7]);
+  log_info(os)("toxaart TryLockCalls[8]: %ld // vthread_monitor_enter", ObjectMonitor::TryLockCalls[8]);
+  log_info(os)("toxaart TryLockCalls[9]: %ld // resume_operation", ObjectMonitor::TryLockCalls[9]);
+  log_info(os)("toxaart TryLockCalls[10]: %ld // resume_operation", ObjectMonitor::TryLockCalls[10]);
+  log_info(os)("toxaart TryLockCalls[11]: %ld // try_spin", ObjectMonitor::TryLockCalls[11]);
+  log_info(os)("toxaart TryLockCalls[12]: %ld // try_enter", ObjectMonitor::TryLockCalls[12]);
+  log_info(os)("toxaart TryLockCalls[13]: %ld // short_fixed_spin", ObjectMonitor::TryLockCalls[13]);
   log_info(os)("toxaart Knob_MaxPosition: %d", ObjectMonitor::Knob_MaxPosition);
 
   EventShutdown e;
