@@ -942,6 +942,8 @@ ObjectMonitor* LightweightSynchronizer::inflate_fast_locked_object(oop object, O
   VerifyThreadState vts(locking_thread, current);
   assert(locking_thread->lock_stack().contains(object), "locking_thread must have object on its lock stack");
 
+  ObjectMonitor::N_Inflate_Fast_Locked_Object_Calls++;
+
   ObjectMonitor* monitor;
 
   if (!UseObjectMonitorTable) {
@@ -996,6 +998,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_fast_locked_object(oop object, O
 
 ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock* lock, ObjectSynchronizer::InflateCause cause, JavaThread* locking_thread, JavaThread* current) {
   VerifyThreadState vts(locking_thread, current);
+  ObjectMonitor::N_Inflate_And_Enter_Calls++;
 
   // Note: In some paths (deoptimization) the 'current' thread inflates and
   // enters the lock on behalf of the 'locking_thread' thread.

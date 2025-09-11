@@ -219,6 +219,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long Try_Lock_Calls[];
   static long N_Monitors_Reused;
   static long N_Monitors_Created_With_New;
+  static long N_Inflate_And_Enter_Calls;
+  static long N_Inflate_Fast_Locked_Object_Calls;
   static int Knob_MaxPosition;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
