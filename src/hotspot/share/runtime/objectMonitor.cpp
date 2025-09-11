@@ -2316,6 +2316,9 @@ long ObjectMonitor::N_Enter_Calls = 0;
 long ObjectMonitor::N_Enter_For_Calls = 0;
 long ObjectMonitor::N_Inflate_And_Enter_Success = 0;
 long ObjectMonitor::N_Inflate_And_Enter_Failure = 0;
+long ObjectMonitor::N_Object_Locker_Calls = 0;
+long ObjectMonitor::N_MonitorEntreHelper_Calls  = 0;
+long ObjectMonitor::N_InterpreterRuntimeMonitorEnter_Calls = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty

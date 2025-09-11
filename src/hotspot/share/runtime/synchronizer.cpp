@@ -484,6 +484,7 @@ ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) : _npm(thread) {
 
   if (_obj() != nullptr) {
     ObjectSynchronizer::enter(_obj, &_lock, _thread);
+    ObjectMonitor::N_Object_Locker_Calls++;
   }
 }
 
