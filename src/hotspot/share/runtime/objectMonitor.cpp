@@ -2310,6 +2310,8 @@ long ObjectMonitor::Try_Lock_Calls[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int ObjectMonitor::Knob_MaxPosition = 0;
 long ObjectMonitor::N_Monitors_Reused = 0;
 long ObjectMonitor::N_Monitors_Created_With_New = 0;
+long ObjectMonitor::N_Inflate_And_Enter_Calls = 0;
+long ObjectMonitor::N_Inflate_Fast_Locked_Object_Calls = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty

@@ -982,6 +982,9 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart Knob_MaxPosition: %d", ObjectMonitor::Knob_MaxPosition);
   log_info(os)("toxaart N_Monitors_Reused: %ld ", ObjectMonitor::N_Monitors_Reused);
   log_info(os)("toxaart N_Monitors_Created_With_New: %ld ", ObjectMonitor::N_Monitors_Created_With_New);
+  log_info(os)("toxaart N_Inflate_And_Enter_Calls: %ld ", ObjectMonitor::N_Inflate_And_Enter_Calls);
+  log_info(os)("toxaart N_Inflate_Fast_Locked_Object_Calls: %ld ", ObjectMonitor::N_Inflate_Fast_Locked_Object_Calls);
+
 
   EventShutdown e;
   if (e.should_commit()) {
