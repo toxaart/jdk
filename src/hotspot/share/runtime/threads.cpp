@@ -993,6 +993,10 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_MonitorEntreHelper_Calls: %ld ", ObjectMonitor::N_MonitorEntreHelper_Calls);
   log_info(os)("toxaart N_InterpreterRuntimeMonitorEnter_Calls: %ld ", ObjectMonitor::N_InterpreterRuntimeMonitorEnter_Calls);
 
+  log_info(os)("toxaart N_CompleteMonitorLockingC_Calls: %ld ", ObjectMonitor::N_CompleteMonitorLockingC_Calls);
+  log_info(os)("toxaart N_MonitorEntreHelper_JVMCI_Calls: %ld ", ObjectMonitor::N_MonitorEntreHelper_JVMCI_Calls);
+  log_info(os)("toxaart N_MonitorEntreHelper_Runtime1_Calls: %ld ", ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls);
+
 
   EventShutdown e;
   if (e.should_commit()) {

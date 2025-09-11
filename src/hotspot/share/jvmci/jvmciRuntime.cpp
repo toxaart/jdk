@@ -387,6 +387,7 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* current) {
 
 JRT_BLOCK_ENTRY(void, JVMCIRuntime::monitorenter(JavaThread* current, oopDesc* obj, BasicLock* lock))
   SharedRuntime::monitor_enter_helper(obj, lock, current);
+  ObjectMonitor::N_MonitorEntreHelper_JVMCI_Calls++;
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* current, oopDesc* obj, BasicLock* lock))

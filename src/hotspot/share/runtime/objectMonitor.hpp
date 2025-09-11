@@ -230,6 +230,10 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_MonitorEntreHelper_Calls;
   static long N_InterpreterRuntimeMonitorEnter_Calls;
 
+  static long N_CompleteMonitorLockingC_Calls;
+  static long N_MonitorEntreHelper_JVMCI_Calls;
+  static long N_MonitorEntreHelper_Runtime1_Calls;
+
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }
