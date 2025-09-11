@@ -434,6 +434,7 @@ bool ObjectMonitor::enter_for(JavaThread* locking_thread) {
 bool ObjectMonitor::try_enter(JavaThread* current, bool check_for_recursion) {
   // TryLock avoids the CAS and handles deflation.
   TryLockResult r = try_lock(current);
+  TryLockCalls[12]++;
   if (r == TryLockResult::Success) {
     assert(_recursions == 0, "invariant");
     return true;
@@ -660,8 +661,6 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
 
 ObjectMonitor::TryLockResult ObjectMonitor::try_lock(JavaThread* current) {
 
-  TryLockCalls++;
-
   int64_t own = owner_raw();
   int64_t first_own = own;
 
@@ -734,6 +733,7 @@ bool ObjectMonitor::try_lock_or_add_to_entry_list(JavaThread* current, ObjectWai
     // Interference - the CAS failed because _entry_list changed.  Before
     // retrying the CAS retry taking the lock as it may now be free.
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[1]++;
       assert(!has_successor(current), "invariant");
       assert(has_owner(current), "invariant");
       node->TState = ObjectWaiter::TS_RUN;
@@ -942,6 +942,7 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
 
   // Try the lock - TATAS
   if (try_lock(current) == TryLockResult::Success) {
+    TryLockCalls[2]++;
     assert(!has_successor(current), "invariant");
     assert(has_owner(current), "invariant");
     return;
@@ -1019,6 +1020,7 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
   for (;;) {
 
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[3]++;
       break;
     }
     assert(!has_owner(current), "invariant");
@@ -1036,6 +1038,7 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
     }
 
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[4]++;
       break;
     }
 
@@ -1125,6 +1128,7 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentN
 
     // This thread has been notified so try to reacquire the lock.
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[5]++;
       break;
     }
 
@@ -1158,6 +1162,7 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentN
     // successful wakeups.  The following test isn't algorithmically
     // necessary, but it helps us maintain sensible statistics.
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[6]++;
       break;
     }
 
@@ -1190,6 +1195,7 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentN
 // succesfully acquire the monitor since we are going to need it on return.
 bool ObjectMonitor::vthread_monitor_enter(JavaThread* current, ObjectWaiter* waiter) {
   if (try_lock(current) == TryLockResult::Success) {
+    TryLockCalls[7]++;
     assert(has_owner(current), "invariant");
     assert(!has_successor(current), "invariant");
     return true;
@@ -1207,6 +1213,7 @@ bool ObjectMonitor::vthread_monitor_enter(JavaThread* current, ObjectWaiter* wai
   // We have to try once more since owner could have exited monitor and checked
   // _entry_list before we added the node to the queue.
   if (try_lock(current) == TryLockResult::Success) {
+    TryLockCalls[8]++;
     assert(has_owner(current), "invariant");
     unlink_after_acquire(current, node);
     if (has_successor(current)) clear_successor();
@@ -1242,6 +1249,7 @@ bool ObjectMonitor::resume_operation(JavaThread* current, ObjectWaiter* node, Co
   guarantee(state == ObjectWaiter::TS_ENTER, "invariant");
 
   if (try_lock(current) == TryLockResult::Success) {
+    TryLockCalls[9]++;
     vthread_epilog(current, node);
     return true;
   }
@@ -1253,6 +1261,7 @@ bool ObjectMonitor::resume_operation(JavaThread* current, ObjectWaiter* node, Co
   OrderAccess::fence();
 
   if (try_lock(current) == TryLockResult::Success) {
+    TryLockCalls[10]++;
     vthread_epilog(current, node);
     return true;
   }
@@ -1616,6 +1625,7 @@ void ObjectMonitor::exit(JavaThread* current, bool not_suspended) {
     // responsibility for ensuring succession falls to the new owner.
 
     if (try_lock(current) != TryLockResult::Success) {
+      TryLockCalls[0]++;
       // Some other thread acquired the lock (or the monitor was
       // deflated). Either way we are done.
       return;
@@ -2296,7 +2306,7 @@ int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
 int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
 int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
 int ObjectMonitor::MaxContentions = 0;
-long ObjectMonitor::TryLockCalls = 0;
+long ObjectMonitor::TryLockCalls[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 int ObjectMonitor::Knob_MaxPosition = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
@@ -2335,6 +2345,7 @@ inline static int adjust_down(int spin_duration) {
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
   for (int ctr = 0; ctr < spin_count; ctr++) {
     TryLockResult status = try_lock(current);
+    TryLockCalls[13]++;
     if (status == TryLockResult::Success) {
       if (adapt) {
         _SpinDuration = adjust_up(_SpinDuration);
@@ -2483,6 +2494,7 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
     // to make try_spin() as foolproof as possible.
     OrderAccess::fence();
     if (try_lock(current) == TryLockResult::Success) {
+      TryLockCalls[11]++;
       return true;
     }
   }
