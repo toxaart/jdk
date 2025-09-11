@@ -2320,6 +2320,10 @@ long ObjectMonitor::N_Object_Locker_Calls = 0;
 long ObjectMonitor::N_MonitorEntreHelper_Calls  = 0;
 long ObjectMonitor::N_InterpreterRuntimeMonitorEnter_Calls = 0;
 
+long ObjectMonitor::N_CompleteMonitorLockingC_Calls = 0;
+long ObjectMonitor::N_MonitorEntreHelper_JVMCI_Calls = 0;
+long ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls = 0;
+
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
 static int Knob_Poverty             = 1000;
