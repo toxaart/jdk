@@ -989,6 +989,10 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_Inflate_And_Enter_Success: %ld ", ObjectMonitor::N_Inflate_And_Enter_Success);
   log_info(os)("toxaart N_Inflate_And_Enter_Failure: %ld ", ObjectMonitor::N_Inflate_And_Enter_Failure);
 
+  log_info(os)("toxaart N_Object_Locker_Calls: %ld ", ObjectMonitor::N_Object_Locker_Calls);
+  log_info(os)("toxaart N_MonitorEntreHelper_Calls: %ld ", ObjectMonitor::N_MonitorEntreHelper_Calls);
+  log_info(os)("toxaart N_InterpreterRuntimeMonitorEnter_Calls: %ld ", ObjectMonitor::N_InterpreterRuntimeMonitorEnter_Calls);
+
 
   EventShutdown e;
   if (e.should_commit()) {

@@ -1957,6 +1957,7 @@ void SharedRuntime::monitor_enter_helper(oopDesc* obj, BasicLock* lock, JavaThre
   JRT_BLOCK_NO_ASYNC
   Handle h_obj(THREAD, obj);
   ObjectSynchronizer::enter(h_obj, lock, current);
+  ObjectMonitor::N_MonitorEntreHelper_Calls++;
   assert(!HAS_PENDING_EXCEPTION, "Should have no exception here");
   JRT_BLOCK_END
 }
