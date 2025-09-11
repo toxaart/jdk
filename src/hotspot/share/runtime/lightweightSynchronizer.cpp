@@ -336,10 +336,13 @@ ObjectMonitor* LightweightSynchronizer::get_or_insert_monitor_from_table(oop obj
   ObjectMonitor* monitor = get_monitor_from_table(current, object);
   if (monitor != nullptr) {
     *inserted = false;
+    ObjectMonitor::N_Monitors_Reused++;
     return monitor;
   }
 
   ObjectMonitor* alloced_monitor = new ObjectMonitor(object);
+  ObjectMonitor::N_Monitors_Created_With_New++;
+
   alloced_monitor->set_anonymous_owner();
 
   // Try insert monitor
@@ -842,6 +845,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_into_object_header(oop object, O
     // CASE: inflated
     if (mark.has_monitor()) {
       ObjectMonitor* inf = mark.monitor();
+      ObjectMonitor::N_Monitors_Reused++;
       markWord dmw = inf->header();
       assert(dmw.is_neutral(), "invariant: header=" INTPTR_FORMAT, dmw.value());
       if (inf->has_anonymous_owner() &&
@@ -865,6 +869,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_into_object_header(oop object, O
     //
     if (mark.is_fast_locked()) {
       ObjectMonitor* monitor = new ObjectMonitor(object);
+      ObjectMonitor::N_Monitors_Created_With_New++;
       monitor->set_header(mark.set_unlocked());
       bool own = locking_thread != nullptr && locking_thread->lock_stack().contains(object);
       if (own) {
@@ -908,6 +913,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_into_object_header(oop object, O
 
     assert(mark.is_unlocked(), "invariant: header=" INTPTR_FORMAT, mark.value());
     ObjectMonitor* m = new ObjectMonitor(object);
+    ObjectMonitor::N_Monitors_Created_With_New++;
     // prepare m for installation - set monitor to initial state
     m->set_header(mark);
 
