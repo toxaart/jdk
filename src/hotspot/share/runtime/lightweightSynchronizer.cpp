@@ -633,6 +633,8 @@ void LightweightSynchronizer::enter_for(Handle obj, BasicLock* lock, JavaThread*
   JavaThread* current = JavaThread::current();
   VerifyThreadState vts(locking_thread, current);
 
+  ObjectMonitor::N_Enter_For_Calls++;
+
   if (obj->klass()->is_value_based()) {
     ObjectSynchronizer::handle_sync_on_value_based_class(obj, locking_thread);
   }
@@ -649,6 +651,11 @@ void LightweightSynchronizer::enter_for(Handle obj, BasicLock* lock, JavaThread*
       // It is assumed that enter_for must enter on an object without contention.
       monitor = inflate_and_enter(obj(), lock, ObjectSynchronizer::inflate_cause_monitor_enter, locking_thread, current);
       // But there may still be a race with deflation.
+      if (monitor == nullptr) {
+        ObjectMonitor::N_Inflate_And_Enter_Failure++;
+      } else {
+        ObjectMonitor::N_Inflate_And_Enter_Success++;
+      }
     } while (monitor == nullptr);
   }
 
@@ -658,6 +665,8 @@ void LightweightSynchronizer::enter_for(Handle obj, BasicLock* lock, JavaThread*
 
 void LightweightSynchronizer::enter(Handle obj, BasicLock* lock, JavaThread* current) {
   assert(current == JavaThread::current(), "must be");
+
+  ObjectMonitor::N_Enter_Calls++;
 
   if (obj->klass()->is_value_based()) {
     ObjectSynchronizer::handle_sync_on_value_based_class(obj, current);
@@ -703,6 +712,13 @@ void LightweightSynchronizer::enter(Handle obj, BasicLock* lock, JavaThread* cur
     }
 
     ObjectMonitor* monitor = inflate_and_enter(obj(), lock, ObjectSynchronizer::inflate_cause_monitor_enter, current, current);
+    if (monitor == nullptr) {
+      ObjectMonitor::N_Inflate_And_Enter_Failure++;
+    }
+    else {
+      ObjectMonitor::N_Inflate_And_Enter_Success++;
+    }
+
     if (monitor != nullptr) {
       cache_setter.set_monitor(monitor);
       return;
