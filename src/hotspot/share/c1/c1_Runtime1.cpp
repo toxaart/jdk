@@ -773,6 +773,7 @@ JRT_END
 
 
 JRT_BLOCK_ENTRY(void, Runtime1::monitorenter(JavaThread* current, oopDesc* obj, BasicObjectLock* lock))
+  ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls++;
 #ifndef PRODUCT
   if (PrintC1Statistics) {
     _monitorenter_slowcase_cnt++;
@@ -780,7 +781,6 @@ JRT_BLOCK_ENTRY(void, Runtime1::monitorenter(JavaThread* current, oopDesc* obj, 
 #endif
   assert(obj == lock->obj(), "must match");
   SharedRuntime::monitor_enter_helper(obj, lock->lock(), current);
-  ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls++;
 JRT_END
 
 
