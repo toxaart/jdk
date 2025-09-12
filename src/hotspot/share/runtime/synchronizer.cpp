@@ -478,13 +478,13 @@ void ObjectSynchronizer::jni_exit(oop obj, TRAPS) {
 // Internal VM locks on java objects
 // standard constructor, allows locking failures
 ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) : _npm(thread) {
+  ObjectMonitor::N_Object_Locker_Calls++;
   _thread = thread;
   _thread->check_for_valid_safepoint_state();
   _obj = obj;
 
   if (_obj() != nullptr) {
-    ObjectSynchronizer::enter(_obj, &_lock, _thread);
-    ObjectMonitor::N_Object_Locker_Calls++;
+    ObjectSynchronizer::enter(_obj, &_lock, _thread);  
   }
 }
 

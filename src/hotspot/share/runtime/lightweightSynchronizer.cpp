@@ -629,11 +629,11 @@ bool LightweightSynchronizer::fast_lock_spin_enter(oop obj, LockStack& lock_stac
 }
 
 void LightweightSynchronizer::enter_for(Handle obj, BasicLock* lock, JavaThread* locking_thread) {
+  ObjectMonitor::N_Enter_For_Calls++;
   assert(!UseObjectMonitorTable || lock->object_monitor_cache() == nullptr, "must be cleared");
   JavaThread* current = JavaThread::current();
   VerifyThreadState vts(locking_thread, current);
 
-  ObjectMonitor::N_Enter_For_Calls++;
 
   if (obj->klass()->is_value_based()) {
     ObjectSynchronizer::handle_sync_on_value_based_class(obj, locking_thread);
@@ -664,9 +664,9 @@ void LightweightSynchronizer::enter_for(Handle obj, BasicLock* lock, JavaThread*
 }
 
 void LightweightSynchronizer::enter(Handle obj, BasicLock* lock, JavaThread* current) {
-  assert(current == JavaThread::current(), "must be");
-
   ObjectMonitor::N_Enter_Calls++;
+  assert(current == JavaThread::current(), "must be");
+  
 
   if (obj->klass()->is_value_based()) {
     ObjectSynchronizer::handle_sync_on_value_based_class(obj, current);
@@ -955,10 +955,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_into_object_header(oop object, O
 }
 
 ObjectMonitor* LightweightSynchronizer::inflate_fast_locked_object(oop object, ObjectSynchronizer::InflateCause cause, JavaThread* locking_thread, JavaThread* current) {
+  ObjectMonitor::N_Inflate_Fast_Locked_Object_Calls++;
   VerifyThreadState vts(locking_thread, current);
   assert(locking_thread->lock_stack().contains(object), "locking_thread must have object on its lock stack");
-
-  ObjectMonitor::N_Inflate_Fast_Locked_Object_Calls++;
 
   ObjectMonitor* monitor;
 
@@ -1013,8 +1012,8 @@ ObjectMonitor* LightweightSynchronizer::inflate_fast_locked_object(oop object, O
 }
 
 ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock* lock, ObjectSynchronizer::InflateCause cause, JavaThread* locking_thread, JavaThread* current) {
-  VerifyThreadState vts(locking_thread, current);
   ObjectMonitor::N_Inflate_And_Enter_Calls++;
+  VerifyThreadState vts(locking_thread, current); 
 
   // Note: In some paths (deoptimization) the 'current' thread inflates and
   // enters the lock on behalf of the 'locking_thread' thread.
@@ -1195,11 +1194,11 @@ bool LightweightSynchronizer::contains_monitor(Thread* current, ObjectMonitor* m
 }
 
 bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* current) {
+  ObjectMonitor::N_Quick_Enter_Calls++;
+
   assert(current->thread_state() == _thread_in_Java, "must be");
   assert(obj != nullptr, "must be");
   NoSafepointVerifier nsv;
-
-  ObjectMonitor::N_Quick_Enter_Calls++;
 
   LockStack& lock_stack = current->lock_stack();
   if (lock_stack.is_full()) {

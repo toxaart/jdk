@@ -246,25 +246,25 @@ inline InstanceKlass* JavaThread::class_being_initialized() const {
 }
 
 inline void JavaThread::om_set_monitor_cache(ObjectMonitor* monitor) {
+  ObjectMonitor::N_OM_Set_Monitor_Cache++;
   assert(UseObjectMonitorTable, "must be");
   assert(monitor != nullptr, "use om_clear_monitor_cache to clear");
   assert(this == current() || monitor->has_owner(this), "only add owned monitors for other threads");
   assert(this == current() || is_obj_deopt_suspend(), "thread must not run concurrently");
-  ObjectMonitor::N_OM_Set_Monitor_Cache++;
   _om_cache.set_monitor(monitor);
 }
 
 inline void JavaThread::om_clear_monitor_cache() {
+  ObjectMonitor::N_OM_Clear_Monitor_Cache++;
   if (UseObjectMonitorTable) {
-    _om_cache.clear();
-    ObjectMonitor::N_OM_Clear_Monitor_Cache++;
+    _om_cache.clear();    
   }
 }
 
 inline ObjectMonitor* JavaThread::om_get_from_monitor_cache(oop obj) {
+  ObjectMonitor::N_OM_Get_From_Monitor_Cache++;
   assert(obj != nullptr, "do not look for null objects");
   assert(this == current(), "only get own thread locals");
-  ObjectMonitor::N_OM_Get_From_Monitor_Cache++;
   return _om_cache.get_monitor(obj);
 }
 
