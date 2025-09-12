@@ -2324,10 +2324,10 @@ long ObjectMonitor::N_CompleteMonitorLockingC_Calls = 0;
 long ObjectMonitor::N_MonitorEntreHelper_JVMCI_Calls = 0;
 long ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls = 0;
 
-long N_Quick_Enter_Calls = 0;
-long N_OM_Get_From_Monitor_Cache = 0;
-long N_OM_Set_Monitor_Cache = 0;
-long N_OM_Clear_Monitor_Cache = 0;
+long ObjectMonitor::N_Quick_Enter_Calls = 0;
+long ObjectMonitor::N_OM_Get_From_Monitor_Cache = 0;
+long ObjectMonitor::N_OM_Set_Monitor_Cache = 0;
+long ObjectMonitor::N_OM_Clear_Monitor_Cache = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
