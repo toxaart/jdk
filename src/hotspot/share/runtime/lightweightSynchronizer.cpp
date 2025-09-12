@@ -1199,6 +1199,8 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
   assert(obj != nullptr, "must be");
   NoSafepointVerifier nsv;
 
+  ObjectMonitor::N_Quick_Enter_Calls++;
+
   LockStack& lock_stack = current->lock_stack();
   if (lock_stack.is_full()) {
     // Always go into runtime if the lock stack is full.
