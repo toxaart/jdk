@@ -265,7 +265,11 @@ inline ObjectMonitor* JavaThread::om_get_from_monitor_cache(oop obj) {
   ObjectMonitor::N_OM_Get_From_Monitor_Cache++;
   assert(obj != nullptr, "do not look for null objects");
   assert(this == current(), "only get own thread locals");
-  return _om_cache.get_monitor(obj);
+  ObjectMonitor* omc = _om_cache.get_monitor(obj);
+  if (omc != nullptr) {
+    ObjectMonitor::N_OM_Get_From_Monitor_Cache_Success++;
+  }
+  return omc;
 }
 
 #endif // SHARE_RUNTIME_JAVATHREAD_INLINE_HPP
