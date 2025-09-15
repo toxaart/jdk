@@ -2330,6 +2330,13 @@ long ObjectMonitor::N_OM_Get_From_Monitor_Cache_Success = 0;
 long ObjectMonitor::N_OM_Set_Monitor_Cache = 0;
 long ObjectMonitor::N_OM_Clear_Monitor_Cache = 0;
 
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p0 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5 = 0;
+
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
 static int Knob_Poverty             = 1000;

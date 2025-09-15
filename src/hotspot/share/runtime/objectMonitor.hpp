@@ -240,6 +240,13 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_OM_Set_Monitor_Cache;
   static long N_OM_Clear_Monitor_Cache;
 
+  static long N_assembly_calls_fast_lock_lightweight_p0;
+  static long N_assembly_calls_fast_lock_lightweight_p1;
+  static long N_assembly_calls_fast_lock_lightweight_p2;
+  static long N_assembly_calls_fast_lock_lightweight_p3;
+  static long N_assembly_calls_fast_lock_lightweight_p4;
+  static long N_assembly_calls_fast_lock_lightweight_p5;
+
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }

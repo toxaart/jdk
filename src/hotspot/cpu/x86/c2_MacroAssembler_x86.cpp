@@ -227,6 +227,8 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
   assert(rax_reg == rax, "Used for CAS");
   assert_different_registers(obj, box, rax_reg, t, thread);
 
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p0), rax_reg);
+
   // Handle inflated monitor.
   Label inflated;
   // Finish fast lock successfully. ZF value is irrelevant.
@@ -277,7 +279,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     andptr(mark, ~(int32_t)markWord::unlocked_value);
     lock(); cmpxchgptr(mark, Address(obj, oopDesc::mark_offset_in_bytes()));
     jcc(Assembler::notEqual, slow_path);
-
+    incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2), rax_reg);
     if (UseObjectMonitorTable) {
       // Need to reload top, clobbered by CAS.
       movl(top, Address(thread, JavaThread::lock_stack_top_offset()));
@@ -328,6 +330,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
       // Cache hit.
       bind(monitor_found);
+      incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3), rax_reg);
       movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
     }
     const ByteSize monitor_tag = in_ByteSize(UseObjectMonitorTable ? 0 : checked_cast<int>(markWord::monitor_value));
@@ -372,6 +375,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 #endif
 
   bind(slow_path);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1), rax_reg);
 #ifdef ASSERT
   // Check that slow_path label is reached with ZF not set.
   jcc(Assembler::notZero, zf_correct);
