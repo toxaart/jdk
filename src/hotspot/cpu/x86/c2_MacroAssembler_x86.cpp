@@ -293,7 +293,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
     incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2), rax_reg);
 
-    jmpb(locked);
+    jmp(locked);
   }
 
   { // Handle inflated monitor.
@@ -392,12 +392,12 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
   jmpb(slow_path);
 
   bind(slow_path_3);
-  //incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9), rax_reg);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9), rax_reg);
   orl(t, 1); // Fast Unlock ZF = 0
   jmpb(slow_path);
 
   bind(locked);
-  //incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10), rax_reg);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10), rax_reg);
 
   // Set ZF = 1
   xorl(rax_reg, rax_reg);
