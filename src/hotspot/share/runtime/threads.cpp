@@ -1005,11 +1005,15 @@ void Threads::destroy_vm() {
 
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p0: %ld // fast_lock_lightweight entry", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p0);
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p1: %ld // fast_lock_lightweight fast_path", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p2: %ld // fast_lock_lightweight monitor_found", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p3: %ld // fast_lock_lightweight slow_path", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p4: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p5: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5);
-
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p2: %ld // fast_lock_lightweight push", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p3: %ld // fast_lock_lightweight inflated", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p4: %ld // fast_lock_lightweight monitor_found", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p5: %ld // fast_lock_lightweight monitor_locked", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p6: %ld // fast_lock_lightweight slow_path_0", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p6);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p7: %ld // fast_lock_lightweight slow_path_1", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p7);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p8: %ld // fast_lock_lightweight slow_path_2", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p8);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p9: %ld // fast_lock_lightweight slow_path_3", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p10: %ld // fast_lock_lightweight locked", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10);
 
 
   EventShutdown e;

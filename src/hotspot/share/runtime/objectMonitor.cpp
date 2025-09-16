@@ -2336,6 +2336,11 @@ long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p6 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p7 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p8 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9 = 0;
+long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10 = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty

@@ -223,7 +223,7 @@ inline Assembler::AvxVectorLen C2_MacroAssembler::vector_length_encoding(int vle
 // rax: tmp -- KILLED
 // t  : tmp -- KILLED
 void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Register rax_reg,
-                                              Register t, Register thread) {
+  Register t, Register thread) {
   assert(rax_reg == rax, "Used for CAS");
   assert_different_registers(obj, box, rax_reg, t, thread);
 
@@ -234,7 +234,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
   // Finish fast lock successfully. ZF value is irrelevant.
   Label locked;
   // Finish fast lock unsuccessfully. MUST jump with ZF == 0
-  Label slow_path;
+  Label slow_path, slow_path_0, slow_path_1, slow_path_2, slow_path_3;
 
   if (UseObjectMonitorTable) {
     // Clear cache in case fast locking succeeds or we need to take the slow-path.
@@ -267,7 +267,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
     // Check if lock-stack is full.
     cmpl(top, LockStack::end_offset() - 1);
-    jcc(Assembler::greater, slow_path);
+    jcc(Assembler::greater, slow_path_0);
 
     // Check if recursive.
     cmpptr(obj, Address(thread, top, Address::times_1, -oopSize));
@@ -278,8 +278,10 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     orptr(rax_reg, markWord::unlocked_value);
     andptr(mark, ~(int32_t)markWord::unlocked_value);
     lock(); cmpxchgptr(mark, Address(obj, oopDesc::mark_offset_in_bytes()));
-    jcc(Assembler::notEqual, slow_path);
+    jcc(Assembler::notEqual, slow_path_1);
+
     incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1), rax_reg);
+
     if (UseObjectMonitorTable) {
       // Need to reload top, clobbered by CAS.
       movl(top, Address(thread, JavaThread::lock_stack_top_offset()));
@@ -288,17 +290,23 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     // After successful lock, push object on lock-stack.
     movptr(Address(thread, top), obj);
     addl(Address(thread, JavaThread::lock_stack_top_offset()), oopSize);
+
+    incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2), rax_reg);
+
     jmpb(locked);
   }
 
   { // Handle inflated monitor.
     bind(inflated);
 
+    incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3), rax_reg);
+
     const Register monitor = t;
 
     if (!UseObjectMonitorTable) {
       assert(mark == monitor, "should be the same here");
-    } else {
+    }
+    else {
       // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
       // Fetch ObjectMonitor* from the cache or take the slow-path.
       Label monitor_found;
@@ -324,14 +332,16 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
       // Search until null encountered, guaranteed _null_sentinel at end.
       cmpptr(Address(t), 1);
-      jcc(Assembler::below, slow_path); // 0 check, but with ZF=0 when *t == 0
+      jcc(Assembler::below, slow_path_2); // 0 check, but with ZF=0 when *t == 0
       increment(t, in_bytes(OMCache::oop_to_oop_difference()));
       jmpb(loop);
 
       // Cache hit.
       bind(monitor_found);
-      incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2), rax_reg);
       movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
+
+      incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4), rax_reg);
+
     }
     const ByteSize monitor_tag = in_ByteSize(UseObjectMonitorTable ? 0 : checked_cast<int>(markWord::monitor_value));
     const Address recursions_address(monitor, ObjectMonitor::recursions_offset() - monitor_tag);
@@ -354,15 +364,41 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
     // Check if recursive.
     cmpptr(box, rax_reg);
-    jccb(Assembler::notEqual, slow_path);
+    jccb(Assembler::notEqual, slow_path_3);
 
     // Recursive.
     increment(recursions_address);
 
     bind(monitor_locked);
+
+    incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5), rax_reg);
+
   }
+  jmpb(locked);
+
+  bind(slow_path_0);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p6), rax_reg);
+  orl(t, 1); // Fast Unlock ZF = 0
+  jmpb(slow_path);
+
+  bind(slow_path_1);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p7), rax_reg);
+  orl(t, 1); // Fast Unlock ZF = 0
+  jmpb(slow_path);
+
+  bind(slow_path_2);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p8), rax_reg);
+  orl(t, 1); // Fast Unlock ZF = 0
+  jmpb(slow_path);
+
+  bind(slow_path_3);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9), rax_reg);
+  orl(t, 1); // Fast Unlock ZF = 0
+  jmpb(slow_path);
 
   bind(locked);
+  incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10), rax_reg);
+
   // Set ZF = 1
   xorl(rax_reg, rax_reg);
 
@@ -375,7 +411,6 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 #endif
 
   bind(slow_path);
-  //incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3), box);
 #ifdef ASSERT
   // Check that slow_path label is reached with ZF not set.
   jcc(Assembler::notZero, zf_correct);
