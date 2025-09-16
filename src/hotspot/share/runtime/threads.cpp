@@ -1003,10 +1003,10 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_OM_Set_Monitor_Cache: %ld ", ObjectMonitor::N_OM_Set_Monitor_Cache);
   log_info(os)("toxaart N_OM_Clear_Monitor_Cache: %ld ", ObjectMonitor::N_OM_Clear_Monitor_Cache);
 
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p0: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p0);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p1: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p2: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2);
-  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p3: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p0: %ld // fast_lock_lightweight entry", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p0);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p1: %ld // fast_lock_lightweight fast_path", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p1);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p2: %ld // fast_lock_lightweight monitor_found", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p2);
+  log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p3: %ld // fast_lock_lightweight slow_path", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p3);
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p4: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4);
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p5: %ld ", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p5);
 
