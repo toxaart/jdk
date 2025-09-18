@@ -1015,6 +1015,9 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p9: %ld // fast_lock_lightweight slow_path_3", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9);
   log_info(os)("toxaart N_assembly_calls_fast_lock_lightweight_p10: %ld // fast_lock_lightweight locked", ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10);
 
+  log_info(os)("toxaart N_park_calls_enter_internal: %ld // fast_lock_lightweight park enter_internal", ObjectMonitor::N_park_calls_enter_internal);
+  log_info(os)("toxaart N_park_calls_reenter_internal: %ld // fast_lock_lightweight park reenter_internal", ObjectMonitor::N_park_calls_reenter_internal);
+
 
   EventShutdown e;
   if (e.should_commit()) {

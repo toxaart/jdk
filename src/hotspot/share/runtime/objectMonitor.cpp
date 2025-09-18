@@ -1025,6 +1025,7 @@ void ObjectMonitor::enter_internal(JavaThread* current) {
     }
     assert(!has_owner(current), "invariant");
 
+    N_park_calls_enter_internal++;
     // park self
     if (do_timed_parked) {
       current->_ParkEvent->park((jlong) recheck_interval);
@@ -1154,6 +1155,7 @@ void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentN
       {
         ClearSuccOnSuspend csos(this);
         ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+        N_park_calls_reenter_internal++;
         current->_ParkEvent->park();
       }
     }
@@ -2341,6 +2343,10 @@ long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p7 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p8 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p9 = 0;
 long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10 = 0;
+
+long ObjectMonitor::N_park_calls_enter_internal = 0;
+long ObjectMonitor::N_park_calls_reenter_internal = 0;
+
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
