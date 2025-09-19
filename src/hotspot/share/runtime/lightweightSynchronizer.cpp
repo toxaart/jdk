@@ -703,9 +703,9 @@ void LightweightSynchronizer::enter(Handle obj, BasicLock* lock, JavaThread* cur
     // If deflation has been observed we also spin while deflation is ongoing.
     if (fast_lock_try_enter(obj(), lock_stack, current)) {
       return;
-    } else if (UseObjectMonitorTable && fast_lock_spin_enter(obj(), lock_stack, current, observed_deflation)) {
-      return;
-    }
+    } //else if (UseObjectMonitorTable && fast_lock_spin_enter(obj(), lock_stack, current, observed_deflation)) {
+     // return;
+    //}
 
     if (observed_deflation) {
       spin_yield.wait();
