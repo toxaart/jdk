@@ -2304,7 +2304,7 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 // hysteresis control to damp the transition rate between spinning and
 // not spinning.
 
-int ObjectMonitor::Knob_SpinLimit    = 100;   // derived by an external tool
+int ObjectMonitor::Knob_SpinLimit    = 10000;   // derived by an external tool
 int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
 int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
 int ObjectMonitor::Max_Contentions = 0;
