@@ -2304,7 +2304,7 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 // hysteresis control to damp the transition rate between spinning and
 // not spinning.
 
-int ObjectMonitor::Knob_SpinLimit    = 10000;   // derived by an external tool
+int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
 int ObjectMonitor::N_Monitors_Reached_Spin_Knob_Limit[] = {0, 0, 0, 0};
 int ObjectMonitor::N_Monitors_Not_Reached_Spin_Knob_Limit[] = { 0, 0, 0, 0};
 int ObjectMonitor::Max_Contentions = 0;
@@ -2348,10 +2348,10 @@ long ObjectMonitor::N_park_calls_enter_internal = 0;
 long ObjectMonitor::N_park_calls_reenter_internal = 0;
 
 
-static int Knob_Bonus               = 10;     // spin success bonus
-static int Knob_Penalty             = 10;     // spin failure penalty
-static int Knob_Poverty             = 10;
-static int Knob_FixedSpin           = 0;
+static int Knob_Bonus               = 100;     // spin success bonus
+static int Knob_Penalty             = 200;     // spin failure penalty
+static int Knob_Poverty             = 1000;
+static int Knob_FixedSpin           = 2000;
 static int Knob_PreSpin             = 10;      // 20-100 likely better, but it's not better in my testing.
 
 inline static int adjust_up(int spin_duration) {
