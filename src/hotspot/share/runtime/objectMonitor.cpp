@@ -2350,7 +2350,7 @@ long ObjectMonitor::N_park_calls_reenter_internal = 0;
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
-static int Knob_Poverty             = 1000;
+static int Knob_Poverty             = 100;
 static int Knob_FixedSpin           = 0;
 static int Knob_PreSpin             = 1;      // 20-100 likely better, but it's not better in my testing.
 
