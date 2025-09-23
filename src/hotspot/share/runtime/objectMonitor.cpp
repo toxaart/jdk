@@ -2352,7 +2352,7 @@ static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
 static int Knob_Poverty             = 1000;
 static int Knob_FixedSpin           = 0;
-static int Knob_PreSpin             = 0;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_PreSpin             = 1;      // 20-100 likely better, but it's not better in my testing.
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
