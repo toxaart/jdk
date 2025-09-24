@@ -2263,8 +2263,11 @@ static int Knob_Penalty                 = 200;     // spin failure penalty
 static int Knob_Poverty                 = 1000;
 static int Knob_FixedSpin               = 0;
 static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
-static int High_Contention_Number       = 30;      // this number of threas competing for an OM means high contention
+static int High_Contention_Number       = 10;      // this number of threas competing for an OM means high contention
+static int TrySpin_runs                 = 0;
+static int TrySpin_CooldownLimit        = 1000;
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
@@ -2295,10 +2298,14 @@ inline static int adjust_down(int spin_duration) {
 
 void ObjectMonitor::adjust_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
-  if (Knob_PreSpin != Knob_PreSpin_HighContention && contentions() > High_Contention_Number) {
-    // Derived experimentally
+  if (Knob_PreSpin != Knob_PreSpin_HighContention && contentions() >= High_Contention_Number) {
     Knob_PreSpin = Knob_PreSpin_HighContention;
-  } 
+  }
+
+  if (TrySpin_runs >= TrySpin_CooldownLimit && contentions() < High_Contention_Number) {
+    Knob_PreSpin = Knob_PreSpin_Default;
+    TrySpin_runs = 0;
+  }
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
@@ -2319,6 +2326,8 @@ bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool a
 
 // Spinning: Fixed frequency (100%), vary duration
 bool ObjectMonitor::try_spin(JavaThread* current) {
+
+  TrySpin_runs++;
 
   // Dumb, brutal spin.  Good for comparative measurements against adaptive spinning.
   int knob_fixed_spin = Knob_FixedSpin;  // 0 (don't spin: default), 2000 good test
