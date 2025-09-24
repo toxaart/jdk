@@ -2267,7 +2267,7 @@ static int Knob_FixedSpin               = 0;
 static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
 static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
-static int High_Contention_Number       = 1;      // this number of threas competing for an OM means high contention
+static int High_Contention_Number       = 0;      // this number of threas competing for an OM means high contention
 
 static int TrySpin_CooldownLimit        = 1000;
 
