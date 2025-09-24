@@ -293,7 +293,7 @@ ObjectMonitor::ObjectMonitor(oop object) :
   _entry_list_tail(nullptr),
   _succ(NO_OWNER),
   _SpinDuration(ObjectMonitor::Knob_SpinLimit),
-  _OwnPreSpin(Knob_PreSpin_Default),
+  _OwnPreSpin(10),
   _TrySpinRuns(0),
   _contentions(0),
   _wait_set(nullptr),
