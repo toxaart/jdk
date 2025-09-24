@@ -2298,9 +2298,8 @@ inline static int adjust_down(int spin_duration) {
 }
 
 void ObjectMonitor::adjust_pre_spin() {
-  //Max_Contentions = MAX2(contentions(), Max_Contentions);
   if (Knob_PreSpin == Knob_PreSpin_Default && contentions() > High_Contention_Number) {
-    Knob_PreSpin = Knob_PreSpin_HighContention;
+    //Knob_PreSpin = Knob_PreSpin_HighContention;
   }
 }
 
