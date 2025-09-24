@@ -2302,7 +2302,9 @@ void ObjectMonitor::adjust_pre_spin() {
     Knob_PreSpin = Knob_PreSpin_HighContention;
   }
 
-  if (TrySpin_runs >= TrySpin_CooldownLimit && contentions() < High_Contention_Number) {
+  if (Knob_PreSpin == Knob_PreSpin_HighContention &&
+      TrySpin_runs >= TrySpin_CooldownLimit &&
+      contentions() < High_Contention_Number) {
     Knob_PreSpin = Knob_PreSpin_Default;
     TrySpin_runs = 0;
   }
