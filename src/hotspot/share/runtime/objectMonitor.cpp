@@ -2300,16 +2300,16 @@ inline static int adjust_down(int spin_duration) {
 
 void ObjectMonitor::adjust_own_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
-  if (_OwnPreSpin != Knob_PreSpin_HighContention && contentions() >= High_Contention_Number) {
+  if (_OwnPreSpin == Knob_PreSpin_Default && contentions() >= High_Contention_Number) {
     _OwnPreSpin = Knob_PreSpin_HighContention;
   }
-
+  /*
   if (_OwnPreSpin == Knob_PreSpin_HighContention &&
       _TrySpinRuns >= TrySpin_CooldownLimit &&
       contentions() < High_Contention_Number) {
     _OwnPreSpin = Knob_PreSpin_Default;
     _TrySpinRuns = 0;
-  }
+  }*/
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
