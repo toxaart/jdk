@@ -2256,13 +2256,15 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
 // hysteresis control to damp the transition rate between spinning and
 // not spinning.
 
-int ObjectMonitor::Knob_SpinLimit    = 5000;   // derived by an external tool
+int ObjectMonitor::Knob_SpinLimit       = 5000;   // derived by an external tool
 
-static int Knob_Bonus               = 100;     // spin success bonus
-static int Knob_Penalty             = 200;     // spin failure penalty
-static int Knob_Poverty             = 1000;
-static int Knob_FixedSpin           = 0;
-static int Knob_PreSpin             = 10;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_Bonus                   = 100;     // spin success bonus
+static int Knob_Penalty                 = 200;     // spin failure penalty
+static int Knob_Poverty                 = 1000;
+static int Knob_FixedSpin               = 0;
+static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
+static int High_Contention_Number       = 20;      // this number of threas competing for an OM means high contention
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
@@ -2295,9 +2297,9 @@ void ObjectMonitor::adjust_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
   // Definition of "high" contention can be adjusted down, but 10 threads competing for the same
   // OM seems reasonable. 
-  if (Knob_PreSpin != 4 && contentions() > 10) {
+  if (Knob_PreSpin != Knob_PreSpin_HighContention && contentions() > High_Contention_Number) {
     // Derived experimentally
-    Knob_PreSpin = 4; 
+    Knob_PreSpin = Knob_PreSpin_HighContention;
   } 
 }
 
