@@ -2298,10 +2298,13 @@ inline static int adjust_down(int spin_duration) {
 }
 
 void ObjectMonitor::adjust_pre_spin() {
+  /*
   const int ctsn = contentions();
   if (Knob_PreSpin == Knob_PreSpin_Default && ctsn > 0) {
     Knob_PreSpin = Knob_PreSpin_HighContention;
-  }
+  }*/
+  Knob_PreSpin = Knob_PreSpin_HighContention;
+
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
