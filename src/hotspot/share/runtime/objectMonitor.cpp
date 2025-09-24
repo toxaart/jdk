@@ -2297,10 +2297,8 @@ inline static int adjust_down(int spin_duration) {
   }
 }
 
-void ObjectMonitor::adjust_own_pre_spin() {
-
+void ObjectMonitor::adjust_pre_spin() {
   Max_Contentions = MAX2(contentions(), Max_Contentions);
-
   if (Knob_PreSpin == Knob_PreSpin_Default && Max_Contentions > High_Contention_Number) {
     Knob_PreSpin = Knob_PreSpin_HighContention;
   }
@@ -2340,7 +2338,7 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
   // sample, just in case the system load, parallelism, contention, or lock
   // modality changed.
 
-  adjust_own_pre_spin();
+  adjust_pre_spin();
 
   int knob_pre_spin = Knob_PreSpin; // 10 (default), 100, 1000 or 2000
   if (short_fixed_spin(current, knob_pre_spin, true)) {
