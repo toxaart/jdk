@@ -2265,7 +2265,7 @@ static int Knob_FixedSpin               = 0;
 static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
 static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
-static int High_Contention_Number       = 2;      // this number of threas competing for an OM means high contention
+static int High_Contention_Number       = 1;      // this number of threas competing for an OM means high contention
 static int Max_Contentions              = 0;       // Max contention over all OMs
 static int TrySpinRuns                  = 0;
 static int TrySpin_CooldownLimit        = 1000;
@@ -2297,13 +2297,9 @@ inline static int adjust_down(int spin_duration) {
   }
 }
 
-void ObjectMonitor::adjust_pre_spin() {
-  /*
-  const int ctsn = contentions();
-  if (Knob_PreSpin == Knob_PreSpin_Default && ctsn > 0) {
-    Knob_PreSpin = Knob_PreSpin_HighContention;
-  }*/
-  Knob_PreSpin = Knob_PreSpin_HighContention;
+int ObjectMonitor::adjust_pre_spin() {
+  
+  return contentions() > High_Contention_Number ? Knob_PreSpin_HighContention : Knob_PreSpin_Default;
 
 }
 
@@ -2341,9 +2337,9 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
   // sample, just in case the system load, parallelism, contention, or lock
   // modality changed.
 
-  adjust_pre_spin();
+  
 
-  int knob_pre_spin = Knob_PreSpin; // 10 (default), 100, 1000 or 2000
+  int knob_pre_spin = adjust_pre_spin();//Knob_PreSpin; // 10 (default), 100, 1000 or 2000
   if (short_fixed_spin(current, knob_pre_spin, true)) {
     return true;
   }
