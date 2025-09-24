@@ -2262,7 +2262,7 @@ static int Knob_Bonus                   = 100;     // spin success bonus
 static int Knob_Penalty                 = 200;     // spin failure penalty
 static int Knob_Poverty                 = 1000;
 static int Knob_FixedSpin               = 0;
-static int Knob_PreSpin                 = 4;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
 static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
 static int High_Contention_Number       = 2;      // this number of threas competing for an OM means high contention
@@ -2299,10 +2299,9 @@ inline static int adjust_down(int spin_duration) {
 
 void ObjectMonitor::adjust_pre_spin() {
   const int ctsn = contentions();
- /*
-  if (Knob_PreSpin == Knob_PreSpin_Default && contentions() > High_Contention_Number) {
-    //Knob_PreSpin = Knob_PreSpin_HighContention;
-  }*/
+  if (Knob_PreSpin == Knob_PreSpin_Default && ctsn > 0) {
+    Knob_PreSpin = Knob_PreSpin_HighContention;
+  }
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
