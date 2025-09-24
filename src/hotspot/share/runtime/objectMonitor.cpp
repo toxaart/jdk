@@ -2295,13 +2295,10 @@ void ObjectMonitor::adjust_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
   // Definition of "high" contention can be adjusted down, but 10 threads competing for the same
   // OM seems reasonable. 
-  if (contentions() > 40) {
+  if (contentions() > 10) {
     // Derived experimentally
     Knob_PreSpin = 4; 
-  } else {
-    // Default value
-    Knob_PreSpin = 10;
-  }
+  } 
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
