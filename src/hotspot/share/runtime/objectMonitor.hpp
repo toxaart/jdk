@@ -194,6 +194,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   int64_t volatile _succ;           // Heir presumptive thread - used for futile wakeup throttling
 
   volatile int _SpinDuration;
+  volatile int _OwnPreSpin;
+  volatile int _TrySpinRuns;
 
   int _contentions;                 // Number of active contentions in enter(). It is used by is_busy()
                                     // along with other fields to determine if an ObjectMonitor can be
@@ -413,7 +415,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
 
   bool      try_spin(JavaThread* current);
   bool      short_fixed_spin(JavaThread* current, int spin_count, bool adapt);
-  void       adjust_pre_spin();
+  void       adjust_own_pre_spin();
   void      exit_epilog(JavaThread* current, ObjectWaiter* Wakee);
 
  public:

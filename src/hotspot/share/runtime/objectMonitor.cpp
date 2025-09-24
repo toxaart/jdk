@@ -293,6 +293,8 @@ ObjectMonitor::ObjectMonitor(oop object) :
   _entry_list_tail(nullptr),
   _succ(NO_OWNER),
   _SpinDuration(ObjectMonitor::Knob_SpinLimit),
+  _OwnPreSpin(Knob_PreSpin_Default),
+  _TrySpinRuns(0),
   _contentions(0),
   _wait_set(nullptr),
   _waiters(0),
@@ -2266,8 +2268,8 @@ static int Knob_PreSpin                 = 10;      // 20-100 likely better, but 
 static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
 static int High_Contention_Number       = 10;      // this number of threas competing for an OM means high contention
-static int TrySpin_runs                 = 0;
-static int TrySpin_CooldownLimit        = 10000;
+
+static int TrySpin_CooldownLimit        = 1000;
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
@@ -2296,17 +2298,17 @@ inline static int adjust_down(int spin_duration) {
   }
 }
 
-void ObjectMonitor::adjust_pre_spin() {
+void ObjectMonitor::adjust_own_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
-  if (Knob_PreSpin != Knob_PreSpin_HighContention && contentions() >= High_Contention_Number) {
-    Knob_PreSpin = Knob_PreSpin_HighContention;
+  if (_OwnPreSpin != Knob_PreSpin_HighContention && contentions() >= High_Contention_Number) {
+    _OwnPreSpin = Knob_PreSpin_HighContention;
   }
 
-  if (Knob_PreSpin == Knob_PreSpin_HighContention &&
-      TrySpin_runs >= TrySpin_CooldownLimit &&
+  if (_OwnPreSpin == Knob_PreSpin_HighContention &&
+      _TrySpinRuns >= TrySpin_CooldownLimit &&
       contentions() < High_Contention_Number) {
-    Knob_PreSpin = Knob_PreSpin_Default;
-    TrySpin_runs = 0;
+    _OwnPreSpin = Knob_PreSpin_Default;
+    _TrySpinRuns = 0;
   }
 }
 
@@ -2329,7 +2331,7 @@ bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool a
 // Spinning: Fixed frequency (100%), vary duration
 bool ObjectMonitor::try_spin(JavaThread* current) {
 
-  TrySpin_runs++;
+  _TrySpinRuns++;
 
   // Dumb, brutal spin.  Good for comparative measurements against adaptive spinning.
   int knob_fixed_spin = Knob_FixedSpin;  // 0 (don't spin: default), 2000 good test
@@ -2344,9 +2346,9 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
   // sample, just in case the system load, parallelism, contention, or lock
   // modality changed.
 
-  adjust_pre_spin();
+  adjust_own_pre_spin();
 
-  int knob_pre_spin = Knob_PreSpin; // 10 (default), 100, 1000 or 2000
+  int knob_pre_spin = _OwnPreSpin; // 10 (default), 100, 1000 or 2000
   if (short_fixed_spin(current, knob_pre_spin, true)) {
     return true;
   }
