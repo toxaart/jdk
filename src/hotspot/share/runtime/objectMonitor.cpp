@@ -2267,7 +2267,7 @@ static int Knob_FixedSpin               = 0;
 static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
 static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
-static int High_Contention_Number       = 0;      // this number of threas competing for an OM means high contention
+static int High_Contention_Number       = 1;      // this number of threas competing for an OM means high contention
 
 static int TrySpin_CooldownLimit        = 1000;
 
@@ -2300,7 +2300,7 @@ inline static int adjust_down(int spin_duration) {
 
 void ObjectMonitor::adjust_own_pre_spin() {
   // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
-  if (_OwnPreSpin == Knob_PreSpin_Default && contentions() >= High_Contention_Number) {
+  if (_OwnPreSpin == Knob_PreSpin_Default && contentions() > High_Contention_Number) {
     _OwnPreSpin = Knob_PreSpin_HighContention;
   }
   /*
