@@ -194,8 +194,6 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   int64_t volatile _succ;           // Heir presumptive thread - used for futile wakeup throttling
 
   volatile int _SpinDuration;
-  volatile int _OwnPreSpin;
-  volatile int _TrySpinRuns;
 
   int _contentions;                 // Number of active contentions in enter(). It is used by is_busy()
                                     // along with other fields to determine if an ObjectMonitor can be
