@@ -2267,7 +2267,7 @@ static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
 static int High_Contention_Number       = 10;      // this number of threas competing for an OM means high contention
 static int TrySpin_runs                 = 0;
-static int TrySpin_CooldownLimit        = 1000;
+static int TrySpin_CooldownLimit        = 10000;
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
