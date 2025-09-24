@@ -2262,7 +2262,7 @@ static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
 static int Knob_Poverty             = 1000;
 static int Knob_FixedSpin           = 0;
-static int Knob_PreSpin             = 7;      // 20-100 likely better, but it's not better in my testing.
+static int Knob_PreSpin             = 10;      // 20-100 likely better, but it's not better in my testing.
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
@@ -2288,6 +2288,19 @@ inline static int adjust_down(int spin_duration) {
     return x;
   } else {
     return spin_duration;
+  }
+}
+
+void ObjectMonitor::adjust_pre_spin() {
+  // In case of high contention it makes sense not to spin much, but rather to inflate proper OM
+  // Definition of "high" contention can be adjusted down, but 10 threads competing for the same
+  // OM seems reasonable. 
+  if (contentions() > 10) {
+    // Derived experimentally
+    Knob_PreSpin = 4; 
+  } else {
+    // Default value
+    Knob_PreSpin = 10;
   }
 }
 
@@ -2322,6 +2335,8 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
   // becoming an absorbing state.  Put another way, we spin briefly to
   // sample, just in case the system load, parallelism, contention, or lock
   // modality changed.
+
+  adjust_pre_spin();
 
   int knob_pre_spin = Knob_PreSpin; // 10 (default), 100, 1000 or 2000
   if (short_fixed_spin(current, knob_pre_spin, true)) {
