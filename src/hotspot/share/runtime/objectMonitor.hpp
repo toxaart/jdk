@@ -413,7 +413,6 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
 
   bool      try_spin(JavaThread* current);
   bool      short_fixed_spin(JavaThread* current, int spin_count, bool adapt);
-  int       adjust_pre_spin();
   void      exit_epilog(JavaThread* current, ObjectWaiter* Wakee);
 
  public:

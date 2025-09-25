@@ -2263,12 +2263,8 @@ static int Knob_Penalty                 = 200;     // spin failure penalty
 static int Knob_Poverty                 = 1000;
 static int Knob_FixedSpin               = 0;
 static int Knob_PreSpin                 = 10;      // 20-100 likely better, but it's not better in my testing.
-static int Knob_PreSpin_Default         = 10;
 static int Knob_PreSpin_HighContention  = 4;       // do less spinning when contention is high, determined experimentally
-static int High_Contention_Number       = 1;      // this number of threas competing for an OM means high contention
-static int Max_Contentions              = 0;       // Max contention over all OMs
-static int TrySpinRuns                  = 0;
-static int TrySpin_CooldownLimit        = 1000;
+static int High_Contention_Number       = 10;      // this number of threas competing for an OM means high contention
 
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
@@ -2297,14 +2293,8 @@ inline static int adjust_down(int spin_duration) {
   }
 }
 
-int ObjectMonitor::adjust_pre_spin() {
-  
-  return contentions() > High_Contention_Number ? Knob_PreSpin_HighContention : Knob_PreSpin_Default;
-
-}
-
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
-  spin_count = contentions() > High_Contention_Number ? 4 : spin_count;
+  spin_count = contentions() > High_Contention_Number ? Knob_PreSpin_HighContention : spin_count;
   for (int ctr = 0; ctr < spin_count; ctr++) {
     TryLockResult status = try_lock(current);
     if (status == TryLockResult::Success) {
