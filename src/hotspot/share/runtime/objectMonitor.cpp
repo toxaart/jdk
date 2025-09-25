@@ -2304,7 +2304,7 @@ int ObjectMonitor::adjust_pre_spin() {
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
-  for (int ctr = 0; ctr < spin_count; ctr++) {
+  for (int ctr = 0; ctr < contentions() > High_Contention_Number ? 4 : spin_count; ctr++) {
     TryLockResult status = try_lock(current);
     if (status == TryLockResult::Success) {
       if (adapt) {
@@ -2322,8 +2322,6 @@ bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool a
 // Spinning: Fixed frequency (100%), vary duration
 bool ObjectMonitor::try_spin(JavaThread* current) {
 
-  TrySpinRuns++;
-
   // Dumb, brutal spin.  Good for comparative measurements against adaptive spinning.
   int knob_fixed_spin = Knob_FixedSpin;  // 0 (don't spin: default), 2000 good test
   if (knob_fixed_spin > 0) {
@@ -2339,7 +2337,7 @@ bool ObjectMonitor::try_spin(JavaThread* current) {
 
   
 
-  int knob_pre_spin = adjust_pre_spin();//Knob_PreSpin; // 10 (default), 100, 1000 or 2000
+  int knob_pre_spin = Knob_PreSpin; // 10 (default), 100, 1000 or 2000
   if (short_fixed_spin(current, knob_pre_spin, true)) {
     return true;
   }
