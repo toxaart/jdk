@@ -2304,8 +2304,8 @@ int ObjectMonitor::adjust_pre_spin() {
 }
 
 bool ObjectMonitor::short_fixed_spin(JavaThread* current, int spin_count, bool adapt) {
-  int ctns = contentions();
-  for (int ctr = 0; ctr < ctns > High_Contention_Number ? 4 : spin_count; ctr++) {
+  spin_count = contentions() > High_Contention_Number ? 4 : spin_count;
+  for (int ctr = 0; ctr < spin_count; ctr++) {
     TryLockResult status = try_lock(current);
     if (status == TryLockResult::Success) {
       if (adapt) {
