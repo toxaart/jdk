@@ -1221,9 +1221,9 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
       lock->set_object_monitor_cache(monitor);
     }
 
-    //if (monitor->spin_enter(current)) {
-    //  return true;
-    //}
+    if (monitor->spin_enter(current)) {
+      return true;
+    }
   }
 
   // Slow-path.
