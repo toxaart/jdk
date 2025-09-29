@@ -1128,7 +1128,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
 
   if (current == locking_thread) {
     // One round of spinning
-    if (monitor->spin_enter(locking_thread)) {
+    if (false && monitor->spin_enter(locking_thread)) {
       return monitor;
     }
 
