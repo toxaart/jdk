@@ -1027,9 +1027,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
     monitor = get_or_insert_monitor(object, current, cause);
   }
 
-  if (monitor->try_enter(locking_thread)) {
-    return monitor;
-  }
+  //if (monitor->try_enter(locking_thread)) {
+  //  return monitor;
+  //}
 
   // Holds is_being_async_deflated() stable throughout this function.
   ObjectMonitorContentionMark contention_mark(monitor);
