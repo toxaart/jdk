@@ -1027,7 +1027,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
     monitor = get_or_insert_monitor(object, current, cause);
   }
 
-  if (monitor->contentions() < 3 && monitor->try_enter(locking_thread)) {
+  if (false && monitor->try_enter(locking_thread)) {
     return monitor;
   }
 
