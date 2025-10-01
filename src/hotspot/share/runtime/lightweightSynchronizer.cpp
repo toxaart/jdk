@@ -279,6 +279,7 @@ class ObjectMonitorTable : AllStatic {
 
   static ObjectMonitor* monitor_put_get(Thread* current, ObjectMonitor* monitor, oop obj) {
     // Enter the monitor into the concurrent hashtable.
+    ObjectMonitor::N_calls_omt_monitor_put_get++;
     ObjectMonitor* result = monitor;
     Lookup lookup_f(obj);
     auto found_f = [&](ObjectMonitor** found) {
@@ -289,6 +290,7 @@ class ObjectMonitorTable : AllStatic {
     _table->insert_get(current, lookup_f, monitor, found_f, &grow);
     verify_monitor_get_result(obj, result);
     if (grow) {
+      ObjectMonitor::N_omt_need_grow++;
       try_notify_grow();
     }
     return result;

@@ -2360,6 +2360,9 @@ long ObjectMonitor::N_try_enter_spin_enter = 0;
 long ObjectMonitor::N_try_enter_monitor_exit_helper = 0;
 long ObjectMonitor::N_try_enter_inflate_and_enter = 0;
 
+long ObjectMonitor::N_calls_omt_monitor_put_get = 0;
+long ObjectMonitor::N_omt_need_grow = 0;
+
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
