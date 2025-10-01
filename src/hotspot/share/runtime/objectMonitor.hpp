@@ -261,7 +261,10 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_LS_calls_success_spin_enter;
 
   static long N_enter_with_contention_mark;
+
+  static long N_try_enter_spin_enter;
   static long N_try_enter_monitor_exit_helper;
+  static long N_try_enter_inflate_and_enter;
 
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
