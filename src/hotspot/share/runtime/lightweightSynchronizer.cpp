@@ -1027,7 +1027,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
     monitor = get_or_insert_monitor(object, current, cause);
   }
 
+  ObjectMonitor::N_LS_calls_before_try_enter++;
   if (monitor->try_enter(locking_thread)) {
+    ObjectMonitor::N_LS_calls_success_try_enter++;
     return monitor;
   }
 
@@ -1128,7 +1130,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
 
   if (current == locking_thread) {
     // One round of spinning
+    ObjectMonitor::N_LS_calls_before_spin_enter++;
     if (monitor->spin_enter(locking_thread)) {
+      ObjectMonitor::N_LS_calls_success_spin_enter++;
       return monitor;
     }
 

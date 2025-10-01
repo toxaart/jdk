@@ -2347,6 +2347,11 @@ long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10 = 0;
 long ObjectMonitor::N_park_calls_enter_internal = 0;
 long ObjectMonitor::N_park_calls_reenter_internal = 0;
 
+long ObjectMonitor::N_LS_calls_before_try_enter = 0;
+long ObjectMonitor::N_LS_calls_success_try_enter = 0;
+long ObjectMonitor::N_LS_calls_before_spin_enter = 0;
+long ObjectMonitor::N_LS_calls_success_spin_enter = 0;
+
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty

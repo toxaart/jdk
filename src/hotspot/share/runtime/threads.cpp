@@ -1018,6 +1018,10 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_park_calls_enter_internal: %ld // fast_lock_lightweight park enter_internal", ObjectMonitor::N_park_calls_enter_internal);
   log_info(os)("toxaart N_park_calls_reenter_internal: %ld // fast_lock_lightweight park reenter_internal", ObjectMonitor::N_park_calls_reenter_internal);
 
+  log_info(os)("toxaart N_LS_calls_before_try_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_before_try_enter);
+  log_info(os)("toxaart N_LS_calls_success_try_enter: %ld // LS inflate_and_enterl", ObjectMonitor::N_LS_calls_success_try_enter);
+  log_info(os)("toxaart N_LS_calls_before_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_before_spin_enter);
+  log_info(os)("toxaart N_LS_calls_success_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_success_spin_enter);
 
   EventShutdown e;
   if (e.should_commit()) {
