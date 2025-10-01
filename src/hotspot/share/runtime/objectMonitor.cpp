@@ -2354,6 +2354,7 @@ long ObjectMonitor::N_LS_calls_before_spin_enter = 0;
 long ObjectMonitor::N_LS_calls_success_spin_enter = 0;
 
 long ObjectMonitor::N_enter_with_contention_mark = 0;
+long ObjectMonitor::N_try_enter_monitor_exit_helper = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus

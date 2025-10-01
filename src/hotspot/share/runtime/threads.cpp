@@ -1024,6 +1024,7 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_LS_calls_success_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_success_spin_enter);
 
   log_info(os)("toxaart N_enter_with_contention_mark: %ld // enter_with_contention_mark", ObjectMonitor::N_enter_with_contention_mark);
+  log_info(os)("toxaart N_try_enter_monitor_exit_helper: %ld // monitor_exit_helper try_enter", ObjectMonitor::N_try_enter_monitor_exit_helper);
 
   EventShutdown e;
   if (e.should_commit()) {
