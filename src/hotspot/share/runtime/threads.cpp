@@ -1018,10 +1018,12 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_park_calls_enter_internal: %ld // fast_lock_lightweight park enter_internal", ObjectMonitor::N_park_calls_enter_internal);
   log_info(os)("toxaart N_park_calls_reenter_internal: %ld // fast_lock_lightweight park reenter_internal", ObjectMonitor::N_park_calls_reenter_internal);
 
-  log_info(os)("toxaart N_LS_calls_before_try_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_before_try_enter);
-  log_info(os)("toxaart N_LS_calls_success_try_enter: %ld // LS inflate_and_enterl", ObjectMonitor::N_LS_calls_success_try_enter);
-  log_info(os)("toxaart N_LS_calls_before_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_before_spin_enter);
-  log_info(os)("toxaart N_LS_calls_success_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_success_spin_enter);
+  log_info(os)("toxaart N_calls_LS_before_try_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_calls_LS_before_try_enter);
+  log_info(os)("toxaart N_calls_LS_success_try_enter: %ld // LS inflate_and_enterl", ObjectMonitor::N_calls_LS_success_try_enter);
+  log_info(os)("toxaart N_calls_LS_before_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_calls_LS_before_spin_enter);
+  log_info(os)("toxaart N_calls_LS_success_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_calls_LS_success_spin_enter);
+
+  log_info(os)("toxaart N_calls_LS_deflate_monitor: %ld // LS deflate_monitor", ObjectMonitor::N_calls_LS_deflate_monitor);
 
   log_info(os)("toxaart N_enter_with_contention_mark: %ld // enter_with_contention_mark", ObjectMonitor::N_enter_with_contention_mark);
 
@@ -1029,8 +1031,11 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_try_enter_inflate_and_enter: %ld // inflate_end_enter try_enter", ObjectMonitor::N_try_enter_inflate_and_enter);
   log_info(os)("toxaart N_try_enter_monitor_exit_helper: %ld // monitor_exit_helper try_enter", ObjectMonitor::N_try_enter_monitor_exit_helper);
 
-  log_info(os)("toxaart N_calls_omt_monitor_put_get: %ld // LS monitor_put_get", ObjectMonitor::N_calls_omt_monitor_put_get);
-  log_info(os)("toxaart N_omt_need_grow: %ld // LS monitor_put_get", ObjectMonitor::N_omt_need_grow);
+  log_info(os)("toxaart N_calls_omt_monitor_put_get: %ld // LS omt monitor_put_get", ObjectMonitor::N_calls_omt_monitor_put_get);
+  log_info(os)("toxaart N_calls_omt_remove_monitor_entry: %ld // LS omt remove_monitor_entry", ObjectMonitor::N_calls_omt_remove_monitor_entry);
+  log_info(os)("toxaart N_calls_omt_contains_monitor: %ld // LS omt contains_monitor", ObjectMonitor::N_calls_omt_contains_monitor);
+  log_info(os)("toxaart N_calls_omt_grow: %ld // LS omt grow", ObjectMonitor::N_calls_omt_grow);
+  log_info(os)("toxaart N_omt_need_grow: %ld // LS omt grow in monitor_put_get", ObjectMonitor::N_omt_need_grow);
 
   EventShutdown e;
   if (e.should_commit()) {

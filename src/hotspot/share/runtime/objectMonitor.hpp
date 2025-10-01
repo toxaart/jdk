@@ -255,10 +255,10 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_park_calls_enter_internal;
   static long N_park_calls_reenter_internal;
 
-  static long N_LS_calls_before_try_enter;
-  static long N_LS_calls_success_try_enter;
-  static long N_LS_calls_before_spin_enter;
-  static long N_LS_calls_success_spin_enter;
+  static long N_calls_LS_before_try_enter;
+  static long N_calls_LS_success_try_enter;
+  static long N_calls_LS_before_spin_enter;
+  static long N_calls_LS_success_spin_enter;
 
   static long N_enter_with_contention_mark;
 
@@ -267,7 +267,12 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_try_enter_inflate_and_enter;
 
   static long N_calls_omt_monitor_put_get;
+  static long N_calls_omt_remove_monitor_entry;
+  static long N_calls_omt_contains_monitor;
+  static long N_calls_omt_grow;
   static long N_omt_need_grow;
+
+  static long N_calls_LS_deflate_monitor;
 
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }

@@ -2349,10 +2349,10 @@ long ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p10 = 0;
 long ObjectMonitor::N_park_calls_enter_internal = 0;
 long ObjectMonitor::N_park_calls_reenter_internal = 0;
 
-long ObjectMonitor::N_LS_calls_before_try_enter = 0;
-long ObjectMonitor::N_LS_calls_success_try_enter = 0;
-long ObjectMonitor::N_LS_calls_before_spin_enter = 0;
-long ObjectMonitor::N_LS_calls_success_spin_enter = 0;
+long ObjectMonitor::N_calls_LS_before_try_enter = 0;
+long ObjectMonitor::N_calls_LS_success_try_enter = 0;
+long ObjectMonitor::N_calls_LS_before_spin_enter = 0;
+long ObjectMonitor::N_calls_LS_success_spin_enter = 0;
 
 long ObjectMonitor::N_enter_with_contention_mark = 0;
 
@@ -2361,7 +2361,13 @@ long ObjectMonitor::N_try_enter_monitor_exit_helper = 0;
 long ObjectMonitor::N_try_enter_inflate_and_enter = 0;
 
 long ObjectMonitor::N_calls_omt_monitor_put_get = 0;
+long ObjectMonitor::N_calls_omt_remove_monitor_entry = 0;
+long ObjectMonitor::N_calls_omt_contains_monitor = 0;
+long ObjectMonitor::N_calls_omt_grow = 0;
 long ObjectMonitor::N_omt_need_grow = 0;
+
+long ObjectMonitor::N_calls_LS_deflate_monitor = 0;
+
 
 
 static int Knob_Bonus               = 100;     // spin success bonus

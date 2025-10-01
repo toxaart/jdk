@@ -238,6 +238,7 @@ class ObjectMonitorTable : AllStatic {
   }
 
   static bool grow(JavaThread* current) {
+    ObjectMonitor::N_calls_omt_grow++;
     ConcurrentTable::GrowTask grow_task(_table);
     if (run_task(current, grow_task, "Grow")) {
       _table_size = table_size(current);
@@ -297,11 +298,13 @@ class ObjectMonitorTable : AllStatic {
   }
 
   static bool remove_monitor_entry(Thread* current, ObjectMonitor* monitor) {
+    ObjectMonitor::N_calls_omt_remove_monitor_entry++;
     LookupMonitor lookup_f(monitor);
     return _table->remove(current, lookup_f);
   }
 
   static bool contains_monitor(Thread* current, ObjectMonitor* monitor) {
+    ObjectMonitor::N_calls_omt_contains_monitor++;
     LookupMonitor lookup_f(monitor);
     bool result = false;
     auto found_f = [&](ObjectMonitor** found) {
@@ -1035,10 +1038,10 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
     monitor = get_or_insert_monitor(object, current, cause);
   }
 
-  ObjectMonitor::N_LS_calls_before_try_enter++;
+  ObjectMonitor::N_calls_LS_before_try_enter++;
   ObjectMonitor::N_try_enter_inflate_and_enter++;
   if (monitor->try_enter(locking_thread)) {
-    ObjectMonitor::N_LS_calls_success_try_enter++;
+    ObjectMonitor::N_calls_LS_success_try_enter++;
     return monitor;
   }
 
@@ -1139,9 +1142,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
 
   if (current == locking_thread) {
     // One round of spinning
-    ObjectMonitor::N_LS_calls_before_spin_enter++;
+    ObjectMonitor::N_calls_LS_before_spin_enter++;
     if (monitor->spin_enter(locking_thread)) {
-      ObjectMonitor::N_LS_calls_success_spin_enter++;
+      ObjectMonitor::N_calls_LS_success_spin_enter++;
       return monitor;
     }
 
@@ -1170,6 +1173,7 @@ void LightweightSynchronizer::deflate_monitor(Thread* current, oop obj, ObjectMo
   if (obj != nullptr) {
     assert(removed, "Should have removed the entry if obj was alive");
   }
+  ObjectMonitor::N_calls_LS_deflate_monitor++;
 }
 
 ObjectMonitor* LightweightSynchronizer::get_monitor_from_table(Thread* current, oop obj) {
