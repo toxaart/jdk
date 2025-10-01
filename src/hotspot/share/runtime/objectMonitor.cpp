@@ -531,6 +531,7 @@ void ObjectMonitor::notify_contended_enter(JavaThread* current) {
 }
 
 void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonitorContentionMark &cm) {
+  ObjectMonitor::N_enter_with_contention_mark++;
   assert(current == JavaThread::current(), "must be");
   assert(!has_owner(current), "must be");
   assert(cm._monitor == this, "must be");
@@ -2351,6 +2352,8 @@ long ObjectMonitor::N_LS_calls_before_try_enter = 0;
 long ObjectMonitor::N_LS_calls_success_try_enter = 0;
 long ObjectMonitor::N_LS_calls_before_spin_enter = 0;
 long ObjectMonitor::N_LS_calls_success_spin_enter = 0;
+
+long ObjectMonitor::N_enter_with_contention_mark = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus

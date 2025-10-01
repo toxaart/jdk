@@ -1023,6 +1023,8 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_LS_calls_before_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_before_spin_enter);
   log_info(os)("toxaart N_LS_calls_success_spin_enter: %ld // LS inflate_and_enter", ObjectMonitor::N_LS_calls_success_spin_enter);
 
+  log_info(os)("toxaart N_enter_with_contention_mark: %ld // enter_with_contention_mark", ObjectMonitor::N_enter_with_contention_mark);
+
   EventShutdown e;
   if (e.should_commit()) {
     e.set_reason("No remaining non-daemon Java threads");
