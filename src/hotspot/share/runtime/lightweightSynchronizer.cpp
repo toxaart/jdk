@@ -1128,9 +1128,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
 
   if (current == locking_thread) {
     // One round of spinning
-    //if (monitor->spin_enter(locking_thread)) {
-    //  return monitor;
-    //}
+    if (monitor->spin_enter(locking_thread)) {
+      return monitor;
+    }
 
     // Monitor is contended, take the time before entering to fix the lock stack.
     LockStackInflateContendedLocks().inflate(current);
