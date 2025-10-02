@@ -1016,9 +1016,9 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
   // Try to get the monitor from the thread-local cache.
   // There's no need to use the cache if we are locking
   // on behalf of another thread.
-  //if (current == locking_thread) {
-  //  monitor = read_caches(current, lock, object);
-  //}
+  if (current == locking_thread) {
+    monitor = read_caches(current, lock, object);
+  }
 
   // Get or create the monitor
   if (monitor == nullptr) {
