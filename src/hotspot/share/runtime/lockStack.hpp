@@ -132,7 +132,7 @@ class LockStack {
 class OMCache {
   friend class VMStructs;
  public:
-  static constexpr int CAPACITY = 128;
+  static constexpr int CAPACITY = 256;
 
  private:
   struct OMCacheEntry {
