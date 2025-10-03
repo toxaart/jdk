@@ -1126,6 +1126,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
     return monitor;
   }
 
+  /*
   if (current == locking_thread) {
     // One round of spinning
     if (monitor->spin_enter(locking_thread)) {
@@ -1134,7 +1135,7 @@ ObjectMonitor* LightweightSynchronizer::inflate_and_enter(oop object, BasicLock*
 
     // Monitor is contended, take the time before entering to fix the lock stack.
     LockStackInflateContendedLocks().inflate(current);
-  }
+  }*/
 
   // enter can block for safepoints; clear the unhandled object oop
   PauseNoSafepointVerifier pnsv(&nsv);
