@@ -339,6 +339,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Cache hit.
       bind(monitor_found);
       movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
+      increment(Address(t, OMCache::oop_to_found_cnt_difference()));
 
       incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4), rax_reg);
 

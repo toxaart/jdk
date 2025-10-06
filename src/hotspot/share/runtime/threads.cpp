@@ -1037,6 +1037,16 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_calls_omt_grow: %ld // LS omt grow", ObjectMonitor::N_calls_omt_grow);
   log_info(os)("toxaart N_omt_need_grow: %ld // LS omt grow in monitor_put_get", ObjectMonitor::N_omt_need_grow);
 
+
+  log_info(os)("toxaart global_om_cache_less_than_10: %ld // ", ObjectMonitor::global_om_cache_less_than_10);
+  log_info(os)("toxaart global_om_cache_more_than_100: %ld // ", ObjectMonitor::global_om_cache_more_than_100);
+  log_info(os)("toxaart global_om_cache_more_than_1000: %ld // ", ObjectMonitor::global_om_cache_more_than_1000);
+  log_info(os)("toxaart global_om_cache_more_than_10000: %ld // ", ObjectMonitor::global_om_cache_more_than_10000);
+  log_info(os)("toxaart global_om_cache_more_than_100000: %ld // ", ObjectMonitor::global_om_cache_more_than_100000);
+  log_info(os)("toxaart global_om_cache_more_than_1000000: %ld // ", ObjectMonitor::global_om_cache_more_than_1000000);
+
+
+
   EventShutdown e;
   if (e.should_commit()) {
     e.set_reason("No remaining non-daemon Java threads");

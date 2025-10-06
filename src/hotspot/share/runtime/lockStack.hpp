@@ -138,6 +138,7 @@ class OMCache {
   struct OMCacheEntry {
     oop _oop = nullptr;
     ObjectMonitor* _monitor = nullptr;
+    uint64_t _found_cnt;
   } _entries[CAPACITY];
   const oop _null_sentinel = nullptr;
 
@@ -145,6 +146,7 @@ class OMCache {
   static ByteSize entries_offset() { return byte_offset_of(OMCache, _entries); }
   static constexpr ByteSize oop_to_oop_difference() { return in_ByteSize(sizeof(OMCacheEntry)); }
   static constexpr ByteSize oop_to_monitor_difference() { return in_ByteSize(sizeof(oop)); }
+  static constexpr ByteSize oop_to_found_cnt_difference() { return in_ByteSize(sizeof(oop)) + in_ByteSize(sizeof(ObjectMonitor*)); }
 
   explicit OMCache(JavaThread* jt);
 

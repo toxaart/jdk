@@ -256,7 +256,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
 
-  OMCacheEntry to_insert = {obj, monitor};
+  OMCacheEntry to_insert = {obj, monitor, 1};
 
   for (int i = 0; i < end; ++i) {
     if (_entries[i]._oop == obj ||
@@ -286,6 +286,7 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
         _entries[i] = {};
         return nullptr;
       }
+      _entries[i]._found_cnt++;
       return _entries[i]._monitor;
     }
   }
@@ -295,6 +296,12 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 inline void OMCache::clear() {
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
+    if (_entries[i] < 10) global_om_cache_less_than_10++;
+    if (_entries[i] > 100) global_om_cache_more_than_100++;
+    if (_entries[i] > 1000) global_om_cache_more_than_1000++;
+    if (_entries[i] > 10000) global_om_cache_more_than_10000++;
+    if (_entries[i] > 100000) global_om_cache_more_than_100000++;
+    if (_entries[i] > 1000000) global_om_cache_more_than_1000000++;
     _entries[i] = {};
   }
 }

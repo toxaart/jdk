@@ -274,6 +274,12 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
 
   static long N_calls_LS_deflate_monitor;
 
+  static long global_om_cache_less_than_10;
+  static long global_om_cache_more_than_100;
+  static long global_om_cache_more_than_1000;
+  static long global_om_cache_more_than_10000;
+  static long global_om_cache_more_than_100000;
+  static long global_om_cache_more_than_1000000;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }

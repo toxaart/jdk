@@ -2368,6 +2368,12 @@ long ObjectMonitor::N_omt_need_grow = 0;
 
 long ObjectMonitor::N_calls_LS_deflate_monitor = 0;
 
+long ObjectMonitor::global_om_cache_less_than_10 = 0;
+long ObjectMonitor::global_om_cache_more_than_100 = 0;
+long ObjectMonitor::global_om_cache_more_than_1000 = 0;
+long ObjectMonitor::global_om_cache_more_than_10000 = 0;
+long ObjectMonitor::global_om_cache_more_than_100000 = 0;
+long ObjectMonitor::global_om_cache_more_than_1000000 = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus
