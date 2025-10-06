@@ -296,12 +296,12 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 inline void OMCache::clear() {
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
-    if (_entries[i] < 10) global_om_cache_less_than_10++;
-    if (_entries[i] > 100) global_om_cache_more_than_100++;
-    if (_entries[i] > 1000) global_om_cache_more_than_1000++;
-    if (_entries[i] > 10000) global_om_cache_more_than_10000++;
-    if (_entries[i] > 100000) global_om_cache_more_than_100000++;
-    if (_entries[i] > 1000000) global_om_cache_more_than_1000000++;
+    if (_entries[i]._found_cnt < 10) ObjectMonitor::global_om_cache_less_than_10++;
+    if (_entries[i]._found_cnt > 100) ObjectMonitor::global_om_cache_more_than_100++;
+    if (_entries[i]._found_cnt > 1000) ObjectMonitor::global_om_cache_more_than_1000++;
+    if (_entries[i]._found_cnt > 10000) ObjectMonitor::global_om_cache_more_than_10000++;
+    if (_entries[i]._found_cnt > 100000) ObjectMonitor::global_om_cache_more_than_100000++;
+    if (_entries[i]._found_cnt > 1000000) ObjectMonitor::global_om_cache_more_than_1000000++;
     _entries[i] = {};
   }
 }
