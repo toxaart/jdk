@@ -1169,11 +1169,37 @@ void LightweightSynchronizer::deflate_monitor(Thread* current, oop obj, ObjectMo
   if (obj != nullptr) {
     deflate_mark_word(obj);
   }
+  uint64_t access_cnt = monitor->access_cnt();
   bool removed = remove_monitor(current, monitor, obj);
   if (obj != nullptr) {
     assert(removed, "Should have removed the entry if obj was alive");
   }
   ObjectMonitor::N_calls_LS_deflate_monitor++;
+  if (removed)
+  {
+    // reporting it
+    int power = floor(log10(static_cast<double>(access_cnt)));
+    switch (power) {
+    case 0 :
+      ObjectMonitor::global_om_access_ge_0_l_1e1++;
+      break;
+    case 1:
+      ObjectMonitor::global_om_access_ge_1e1_l_1e2++;
+      break;
+    case 2:
+      ObjectMonitor::global_om_access_ge_1e2_l_1e3++;
+      break;
+    case 3:
+      ObjectMonitor::global_om_access_ge_1e3_l_1e4++;
+      break;
+    case 4:
+      ObjectMonitor::global_om_access_ge_1e4_l_1e5++;
+      break;
+    case 5:
+      ObjectMonitor::global_om_access_ge_1e5_l_1e6++;
+
+    }
+  }
 }
 
 ObjectMonitor* LightweightSynchronizer::get_monitor_from_table(Thread* current, oop obj) {
@@ -1220,6 +1246,9 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
     ObjectMonitor* monitor;
     if (UseObjectMonitorTable) {
       monitor = read_caches(current, lock, obj);
+      if (monitor != nullptr) {
+        monitor->increment_access_cnt();
+      }
     } else {
       monitor = ObjectSynchronizer::read_monitor(mark);
     }

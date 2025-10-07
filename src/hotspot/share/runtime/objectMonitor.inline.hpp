@@ -284,4 +284,8 @@ inline bool ObjectMonitor::is_jfr_excluded(const Klass* monitor_klass) {
   JFR_ONLY(return vmSymbols::jdk_jfr_internal_management_HiddenWait() == monitor_klass->name();)
 }
 
+inline void ObjectMonitor::increment_access_cnt() {
+  _access_cnt++;
+}
+
 #endif // SHARE_RUNTIME_OBJECTMONITOR_INLINE_HPP

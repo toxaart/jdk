@@ -204,6 +204,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   volatile int  _waiters;           // number of waiting threads
   volatile int _wait_set_lock;      // protects wait set queue - simple spinlock
 
+  uint64_t _access_cnt;
+
  public:
 
   static void Initialize();
@@ -274,18 +276,19 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
 
   static long N_calls_LS_deflate_monitor;
 
-  static long global_om_cache_less_than_10;
-  static long global_om_cache_more_than_100;
-  static long global_om_cache_more_than_1000;
-  static long global_om_cache_more_than_10000;
-  static long global_om_cache_more_than_100000;
-  static long global_om_cache_more_than_1000000;
+  static long global_om_access_ge_0_l_1e1;
+  static long global_om_access_ge_1e1_l_1e2;
+  static long global_om_access_ge_1e2_l_1e3;
+  static long global_om_access_ge_1e3_l_1e4;
+  static long global_om_access_ge_1e4_l_1e5;
+  static long global_om_access_ge_1e5_l_1e6;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }
   static ByteSize succ_offset()        { return byte_offset_of(ObjectMonitor, _succ); }
   static ByteSize entry_list_offset()  { return byte_offset_of(ObjectMonitor, _entry_list); }
+  static ByteSize access_cnt_offset()  { return byte_offset_of(ObjectMonitor, _access_cnt); }
 
   // ObjectMonitor references can be ORed with markWord::monitor_value
   // as part of the ObjectMonitor tagging mechanism. When we combine an
@@ -392,6 +395,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   intx      recursions() const                                         { return _recursions; }
   void      set_recursions(size_t recursions);
   void      increment_recursions(JavaThread* current);
+  void      increment_access_cnt();
+  uint64_t  access_cnt() const                                         { return _access_cnt; }
 
   // JVM/TI GetObjectMonitorUsage() needs this:
   int waiters() const;

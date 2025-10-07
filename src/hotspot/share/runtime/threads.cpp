@@ -1037,12 +1037,12 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_omt_need_grow: %ld // LS omt grow in monitor_put_get", ObjectMonitor::N_omt_need_grow);
 
 
-  log_info(os)("toxaart global_om_cache_less_than_10: %ld // ", ObjectMonitor::global_om_cache_less_than_10);
-  log_info(os)("toxaart global_om_cache_more_than_100: %ld // ", ObjectMonitor::global_om_cache_more_than_100);
-  log_info(os)("toxaart global_om_cache_more_than_1000: %ld // ", ObjectMonitor::global_om_cache_more_than_1000);
-  log_info(os)("toxaart global_om_cache_more_than_10000: %ld // ", ObjectMonitor::global_om_cache_more_than_10000);
-  log_info(os)("toxaart global_om_cache_more_than_100000: %ld // ", ObjectMonitor::global_om_cache_more_than_100000);
-  log_info(os)("toxaart global_om_cache_more_than_1000000: %ld // ", ObjectMonitor::global_om_cache_more_than_1000000);
+  log_info(os)("toxaart global_om_access_ge_0_l_1e1: %ld // ", ObjectMonitor::global_om_access_ge_0_l_1e1);
+  log_info(os)("toxaart global_om_access_ge_1e1_l_1e2: %ld // ", ObjectMonitor::global_om_access_ge_1e1_l_1e2);
+  log_info(os)("toxaart global_om_access_ge_1e2_l_1e3: %ld // ", ObjectMonitor::global_om_access_ge_1e2_l_1e3);
+  log_info(os)("toxaart global_om_access_ge_1e3_l_1e4: %ld // ", ObjectMonitor::global_om_access_ge_1e3_l_1e4);
+  log_info(os)("toxaart global_om_access_ge_1e4_l_1e5: %ld // ", ObjectMonitor::global_om_access_ge_1e4_l_1e5);
+  log_info(os)("toxaart global_om_access_ge_1e5_l_1e6: %ld // ", ObjectMonitor::global_om_access_ge_1e5_l_1e6);
 
 
 

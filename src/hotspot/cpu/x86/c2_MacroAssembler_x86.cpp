@@ -341,6 +341,9 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
       increment(Address(t, OMCache::oop_to_found_cnt_difference()));
 
+      const Address access_cnt_address{ monitor, ObjectMonitor::access_cnt_offset() };
+      increment(access_cnt_address);
+
       incrementq(ExternalAddress((address)&ObjectMonitor::N_assembly_calls_fast_lock_lightweight_p4), rax_reg);
 
     }

@@ -296,7 +296,8 @@ ObjectMonitor::ObjectMonitor(oop object) :
   _contentions(0),
   _wait_set(nullptr),
   _waiters(0),
-  _wait_set_lock(0)
+  _wait_set_lock(0),
+  _access_cnt(0)
 { }
 
 ObjectMonitor::~ObjectMonitor() {
@@ -2367,12 +2368,12 @@ long ObjectMonitor::N_omt_need_grow = 0;
 
 long ObjectMonitor::N_calls_LS_deflate_monitor = 0;
 
-long ObjectMonitor::global_om_cache_less_than_10 = 0;
-long ObjectMonitor::global_om_cache_more_than_100 = 0;
-long ObjectMonitor::global_om_cache_more_than_1000 = 0;
-long ObjectMonitor::global_om_cache_more_than_10000 = 0;
-long ObjectMonitor::global_om_cache_more_than_100000 = 0;
-long ObjectMonitor::global_om_cache_more_than_1000000 = 0;
+long ObjectMonitor::global_om_access_ge_0_l_1e1 = 0;
+long ObjectMonitor::global_om_access_ge_1e1_l_1e2 = 0;
+long ObjectMonitor::global_om_access_ge_1e2_l_1e3 = 0;
+long ObjectMonitor::global_om_access_ge_1e3_l_1e4 = 0;
+long ObjectMonitor::global_om_access_ge_1e4_l_1e5 = 0;
+long ObjectMonitor::global_om_access_ge_1e5_l_1e6 = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus
