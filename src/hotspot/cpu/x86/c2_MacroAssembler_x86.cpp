@@ -304,6 +304,9 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Load cache address
       lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
 
+      orl(t, 1);
+      jmp(slow_path);
+
       const int num_unrolled = 2;
       for (int i = 0; i < num_unrolled; i++) {
         cmpptr(obj, Address(t));
