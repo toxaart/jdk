@@ -302,6 +302,50 @@ ObjectMonitor::ObjectMonitor(oop object) :
 
 ObjectMonitor::~ObjectMonitor() {
   _object.release(_oop_storage);
+
+  int power_of_access_cnt = floor(log10(static_cast<double>(_access_cnt)));
+  switch (power_of_access_cnt) {
+  case 0:
+    ObjectMonitor::global_om_access_ge_0_l_1e1++;
+    break;
+  case 1:
+    ObjectMonitor::global_om_access_ge_1e1_l_1e2++;
+    break;
+  case 2:
+    ObjectMonitor::global_om_access_ge_1e2_l_1e3++;
+    break;
+  case 3:
+    ObjectMonitor::global_om_access_ge_1e3_l_1e4++;
+    break;
+  case 4:
+    ObjectMonitor::global_om_access_ge_1e4_l_1e5++;
+    break;
+  case 5:
+    ObjectMonitor::global_om_access_ge_1e5_l_1e6++;
+    break;
+  }
+
+  int power_of_lock_cnt = floor(log10(static_cast<double>(_lock_cnt)));
+  switch (power_of_lock_cnt) {
+  case 0:
+    ObjectMonitor::global_om_lock_ge_0_l_1e1++;
+    break;
+  case 1:
+    ObjectMonitor::global_om_lock_ge_1e1_l_1e2++;
+    break;
+  case 2:
+    ObjectMonitor::global_om_lock_ge_1e2_l_1e3++;
+    break;
+  case 3:
+    ObjectMonitor::global_om_lock_ge_1e3_l_1e4++;
+    break;
+  case 4:
+    ObjectMonitor::global_om_lock_ge_1e4_l_1e5++;
+    break;
+  case 5:
+    ObjectMonitor::global_om_lock_ge_1e5_l_1e6++;
+    break;
+  }
 }
 
 oop ObjectMonitor::object() const {
@@ -2374,6 +2418,13 @@ long ObjectMonitor::global_om_access_ge_1e2_l_1e3 = 0;
 long ObjectMonitor::global_om_access_ge_1e3_l_1e4 = 0;
 long ObjectMonitor::global_om_access_ge_1e4_l_1e5 = 0;
 long ObjectMonitor::global_om_access_ge_1e5_l_1e6 = 0;
+
+long ObjectMonitor::global_om_lock_ge_0_l_1e1 = 0;
+long ObjectMonitor::global_om_lock_ge_1e1_l_1e2 = 0;
+long ObjectMonitor::global_om_lock_ge_1e2_l_1e3 = 0;
+long ObjectMonitor::global_om_lock_ge_1e3_l_1e4 = 0;
+long ObjectMonitor::global_om_lock_ge_1e4_l_1e5 = 0;
+long ObjectMonitor::global_om_lock_ge_1e5_l_1e6 = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus

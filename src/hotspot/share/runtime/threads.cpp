@@ -1044,6 +1044,13 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart global_om_access_ge_1e4_l_1e5: %ld // ", ObjectMonitor::global_om_access_ge_1e4_l_1e5);
   log_info(os)("toxaart global_om_access_ge_1e5_l_1e6: %ld // ", ObjectMonitor::global_om_access_ge_1e5_l_1e6);
 
+  log_info(os)("toxaart global_om_lock_ge_0_l_1e1: %ld // ", ObjectMonitor::global_om_lock_ge_0_l_1e1);
+  log_info(os)("toxaart global_om_lock_ge_1e1_l_1e2: %ld // ", ObjectMonitor::global_om_lock_ge_1e1_l_1e2);
+  log_info(os)("toxaart global_om_lock_ge_1e2_l_1e3: %ld // ", ObjectMonitor::global_om_lock_ge_1e2_l_1e3);
+  log_info(os)("toxaart global_om_lock_ge_1e3_l_1e4: %ld // ", ObjectMonitor::global_om_lock_ge_1e3_l_1e4);
+  log_info(os)("toxaart global_om_lock_ge_1e4_l_1e5: %ld // ", ObjectMonitor::global_om_lock_ge_1e4_l_1e5);
+  log_info(os)("toxaart global_om_lock_ge_1e5_l_1e6: %ld // ", ObjectMonitor::global_om_lock_ge_1e5_l_1e6);
+
 
 
   EventShutdown e;

@@ -288,4 +288,8 @@ inline void ObjectMonitor::increment_access_cnt() {
   _access_cnt++;
 }
 
+inline void ObjectMonitor::increment_lock_cnt() {
+  _lock_cnt++;
+}
+
 #endif // SHARE_RUNTIME_OBJECTMONITOR_INLINE_HPP

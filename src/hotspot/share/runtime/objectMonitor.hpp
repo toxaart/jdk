@@ -205,6 +205,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   volatile int _wait_set_lock;      // protects wait set queue - simple spinlock
 
   uint64_t _access_cnt;
+  uint64_t _lock_cnt;
 
  public:
 
@@ -283,12 +284,21 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long global_om_access_ge_1e4_l_1e5;
   static long global_om_access_ge_1e5_l_1e6;
 
+
+  static long global_om_lock_ge_0_l_1e1;
+  static long global_om_lock_ge_1e1_l_1e2;
+  static long global_om_lock_ge_1e2_l_1e3;
+  static long global_om_lock_ge_1e3_l_1e4;
+  static long global_om_lock_ge_1e4_l_1e5;
+  static long global_om_lock_ge_1e5_l_1e6;
+
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }
   static ByteSize succ_offset()        { return byte_offset_of(ObjectMonitor, _succ); }
   static ByteSize entry_list_offset()  { return byte_offset_of(ObjectMonitor, _entry_list); }
   static ByteSize access_cnt_offset()  { return byte_offset_of(ObjectMonitor, _access_cnt); }
+  static ByteSize lock_cnt_offset()    { return byte_offset_of(ObjectMonitor, _lock_cnt); }
 
   // ObjectMonitor references can be ORed with markWord::monitor_value
   // as part of the ObjectMonitor tagging mechanism. When we combine an
@@ -397,6 +407,8 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   void      increment_recursions(JavaThread* current);
   void      increment_access_cnt();
   uint64_t  access_cnt() const                                         { return _access_cnt; }
+  void      increment_lock_cnt();
+  uint64_t  lock_cnt()                                                 { return _lock_cnt; }
 
   // JVM/TI GetObjectMonitorUsage() needs this:
   int waiters() const;
