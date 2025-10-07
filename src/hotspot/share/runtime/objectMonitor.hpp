@@ -294,6 +294,10 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long global_om_lock_ge_1e5_l_1e6;
   static long global_om_lock_ge_1e6;
 
+  static jlong accumlated_table_get_time;
+  static long n_calls_table_get;
+
+
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }

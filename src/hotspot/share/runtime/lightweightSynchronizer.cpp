@@ -183,6 +183,7 @@ class ObjectMonitorTable : AllStatic {
   }
 
   static ObjectMonitor* monitor_get(Thread* current, oop obj) {
+    jlong t0 = os::javaTimeNanos();
     ObjectMonitor* result = nullptr;
     Lookup lookup_f(obj);
     auto found_f = [&](ObjectMonitor** found) {
@@ -191,6 +192,9 @@ class ObjectMonitorTable : AllStatic {
     };
     _table->get(current, lookup_f, found_f);
     verify_monitor_get_result(obj, result);
+    jlong t1 = os::javaTimeNanos();
+    ObjectMonitor::accumlated_table_get_time += t1 - t0;
+    ObjectMonitor::n_calls_table_get++;
     return result;
   }
 

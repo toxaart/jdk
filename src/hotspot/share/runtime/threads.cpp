@@ -1054,6 +1054,7 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart global_om_lock_ge_1e6: %ld // ", ObjectMonitor::global_om_lock_ge_1e6);
 
 
+  log_info(os)("toxaart avg OMT get time: %e // ", static_cast<double>(ObjectMonitor::accumlated_table_get_time) / static_cast<double>(ObjectMonitor::n_calls_table_get));
 
   EventShutdown e;
   if (e.should_commit()) {

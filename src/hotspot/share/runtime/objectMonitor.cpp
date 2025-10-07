@@ -2432,6 +2432,9 @@ long ObjectMonitor::global_om_lock_ge_1e4_l_1e5 = 0;
 long ObjectMonitor::global_om_lock_ge_1e5_l_1e6 = 0;
 long ObjectMonitor::global_om_lock_ge_1e6 = 0;
 
+jlong ObjectMonitor::accumlated_table_get_time = 0;
+long ObjectMonitor::n_calls_table_get = 0;
+
 
 static int Knob_Bonus               = 100;     // spin success bonus
 static int Knob_Penalty             = 200;     // spin failure penalty
