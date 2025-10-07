@@ -1203,6 +1203,10 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
     ObjectMonitor* monitor;
     if (UseObjectMonitorTable) {
       monitor = read_caches(current, lock, obj);
+      if (monitor == nullptr) {
+        bool inserted;
+        monitor = get_or_insert_monitor_from_table(obj, current, &inserted);
+      }
     } else {
       monitor = ObjectSynchronizer::read_monitor(mark);
     }
