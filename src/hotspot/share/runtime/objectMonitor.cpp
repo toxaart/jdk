@@ -323,6 +323,8 @@ ObjectMonitor::~ObjectMonitor() {
   case 5:
     ObjectMonitor::global_om_access_ge_1e5_l_1e6++;
     break;
+  default:
+    ObjectMonitor::global_om_access_ge_1e6++;
   }
 
   int power_of_lock_cnt = floor(log10(static_cast<double>(_lock_cnt)));
@@ -345,6 +347,8 @@ ObjectMonitor::~ObjectMonitor() {
   case 5:
     ObjectMonitor::global_om_lock_ge_1e5_l_1e6++;
     break;
+  default:
+    ObjectMonitor::global_om_lock_ge_1e6++;
   }
 }
 
@@ -2418,6 +2422,7 @@ long ObjectMonitor::global_om_access_ge_1e2_l_1e3 = 0;
 long ObjectMonitor::global_om_access_ge_1e3_l_1e4 = 0;
 long ObjectMonitor::global_om_access_ge_1e4_l_1e5 = 0;
 long ObjectMonitor::global_om_access_ge_1e5_l_1e6 = 0;
+long ObjectMonitor::global_om_access_ge_1e6 = 0;
 
 long ObjectMonitor::global_om_lock_ge_0_l_1e1 = 0;
 long ObjectMonitor::global_om_lock_ge_1e1_l_1e2 = 0;
@@ -2425,6 +2430,7 @@ long ObjectMonitor::global_om_lock_ge_1e2_l_1e3 = 0;
 long ObjectMonitor::global_om_lock_ge_1e3_l_1e4 = 0;
 long ObjectMonitor::global_om_lock_ge_1e4_l_1e5 = 0;
 long ObjectMonitor::global_om_lock_ge_1e5_l_1e6 = 0;
+long ObjectMonitor::global_om_lock_ge_1e6 = 0;
 
 
 static int Knob_Bonus               = 100;     // spin success bonus

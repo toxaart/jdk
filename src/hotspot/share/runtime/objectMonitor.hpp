@@ -283,6 +283,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long global_om_access_ge_1e3_l_1e4;
   static long global_om_access_ge_1e4_l_1e5;
   static long global_om_access_ge_1e5_l_1e6;
+  static long global_om_access_ge_1e6;
 
 
   static long global_om_lock_ge_0_l_1e1;
@@ -291,6 +292,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long global_om_lock_ge_1e3_l_1e4;
   static long global_om_lock_ge_1e4_l_1e5;
   static long global_om_lock_ge_1e5_l_1e6;
+  static long global_om_lock_ge_1e6;
 
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
