@@ -1250,6 +1250,7 @@ public:
 private:
   LockStack _lock_stack;
   OMCache _om_cache;
+  uint64_t _cnt;
 
 public:
   LockStack& lock_stack() { return _lock_stack; }

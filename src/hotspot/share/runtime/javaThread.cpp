@@ -517,7 +517,8 @@ JavaThread::JavaThread(MemTag mem_tag) :
 #endif
 
   _lock_stack(this),
-  _om_cache(this) {
+  _om_cache(this),
+  _cnt(0){
   set_jni_functions(jni_functions());
 
 #if INCLUDE_JVMCI

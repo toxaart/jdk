@@ -251,7 +251,7 @@ inline void JavaThread::om_set_monitor_cache(ObjectMonitor* monitor) {
   assert(monitor != nullptr, "use om_clear_monitor_cache to clear");
   assert(this == current() || monitor->has_owner(this), "only add owned monitors for other threads");
   assert(this == current() || is_obj_deopt_suspend(), "thread must not run concurrently");
-  _om_cache.set_monitor(monitor);
+  _om_cache.set_monitor(monitor, _cnt++);
 }
 
 inline void JavaThread::om_clear_monitor_cache() {

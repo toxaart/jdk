@@ -151,7 +151,7 @@ class OMCache {
   explicit OMCache(JavaThread* jt);
 
   inline ObjectMonitor* get_monitor(oop o);
-  inline void set_monitor(ObjectMonitor* monitor);
+  inline void set_monitor(ObjectMonitor* monitor, uint64_t cnt);
   inline void clear();
 
 };

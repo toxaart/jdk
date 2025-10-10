@@ -249,7 +249,13 @@ inline void LockStack::oops_do(OopClosure* cl) {
   verify("post-oops-do");
 }
 
-inline void OMCache::set_monitor(ObjectMonitor *monitor) {
+inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
+
+  oop obj = monitor->object_peek();
+  OMCacheEntry to_insert = { obj, monitor, 1 };
+  _entries[cnt % CAPACITY] = to_insert;
+
+  /*
   const int end = OMCache::CAPACITY - 1;
 
   oop obj = monitor->object_peek();
@@ -269,7 +275,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
     // Swap with the most recent value.
     ::swap(to_insert, _entries[i]);
   }
-  _entries[end] = to_insert;
+  _entries[end] = to_insert;*/
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
