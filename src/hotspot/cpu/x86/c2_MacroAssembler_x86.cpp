@@ -314,6 +314,10 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Load cache address
       lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
 
+      // calculate the address of the last element of 8-element cache 
+      mov(rax_reg, t);
+      increment(rax_reg, 8 * in_bytes(OMCache::oop_to_oop_difference()));
+
       const int num_unrolled = 2;
       for (int i = 0; i < num_unrolled; i++) {
         cmpptr(obj, Address(t));
@@ -334,7 +338,14 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       cmpptr(Address(t), 1);
       jcc(Assembler::below, slow_path_2); // 0 check, but with ZF=0 when *t == 0
       increment(t, in_bytes(OMCache::oop_to_oop_difference()));
+#if 1
+      cmpptr(t, rax_reg);
+      jcc(Assembler::below, loop);
+      orl(t, 1); // ZF = 0
+      jmpb(slow_path_2);
+#else
       jmpb(loop);
+#endif
 
       // Cache hit.
       bind(monitor_found);
