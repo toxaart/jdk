@@ -550,9 +550,12 @@ class LightweightSynchronizer::CacheSetter : StackObj {
 // Reads first from the BasicLock cache then from the OMCache in the current thread.
 // C2 fast-path may have put the monitor in the cache in the BasicLock.
 inline static ObjectMonitor* read_caches(JavaThread* current, BasicLock* lock, oop object) {
+  ObjectMonitor::N_BasicLock_OM_Cache_Calls++;
   ObjectMonitor* monitor = lock->object_monitor_cache();
   if (monitor == nullptr) {
     monitor = current->om_get_from_monitor_cache(object);
+  } else {
+    ObjectMonitor::N_BasicLock_OM_Cache_Calls_Success++;
   }
   return monitor;
 }
@@ -1248,6 +1251,8 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
   assert(obj != nullptr, "must be");
   NoSafepointVerifier nsv;
 
+  ObjectMonitor::N_Quick_Enter_Calls++;
+
   LockStack& lock_stack = current->lock_stack();
   if (lock_stack.is_full()) {
     // Always go into runtime if the lock stack is full.
@@ -1260,6 +1265,7 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
   // Only for 32bit which has limited support for fast locking outside the runtime.
   if (lock_stack.try_recursive_enter(obj)) {
     // Recursive lock successful.
+    ObjectMonitor::N_Quick_Enter_Calls_Success++;
     return true;
   }
 
@@ -1268,6 +1274,7 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
     if (obj->cas_set_mark(locked_mark, mark) == mark) {
       // Successfully fast-locked, push object to lock-stack and return.
       lock_stack.push(obj);
+      ObjectMonitor::N_Quick_Enter_Calls_Success++;
       return true;
     }
   }
@@ -1299,6 +1306,7 @@ bool LightweightSynchronizer::quick_enter(oop obj, BasicLock* lock, JavaThread* 
     }
 
     if (monitor->spin_enter(current)) {
+      ObjectMonitor::N_Quick_Enter_Calls_Success++;
       return true;
     }
   }

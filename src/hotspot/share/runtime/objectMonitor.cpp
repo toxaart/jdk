@@ -2377,6 +2377,9 @@ long ObjectMonitor::N_MonitorEntreHelper_JVMCI_Calls = 0;
 long ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls = 0;
 
 long ObjectMonitor::N_Quick_Enter_Calls = 0;
+long ObjectMonitor::N_Quick_Enter_Calls_Success = 0;
+long ObjectMonitor::N_BasicLock_OM_Cache_Calls = 0;
+long ObjectMonitor::N_BasicLock_OM_Cache_Calls_Success = 0;
 long ObjectMonitor::N_OM_Get_From_Monitor_Cache = 0;
 long ObjectMonitor::N_OM_Get_From_Monitor_Cache_Success = 0;
 long ObjectMonitor::N_OM_Set_Monitor_Cache = 0;

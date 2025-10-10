@@ -238,6 +238,9 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   static long N_MonitorEntreHelper_Runtime1_Calls;
 
   static long N_Quick_Enter_Calls;
+  static long N_Quick_Enter_Calls_Success;
+  static long N_BasicLock_OM_Cache_Calls;
+  static long N_BasicLock_OM_Cache_Calls_Success;
   static long N_OM_Get_From_Monitor_Cache;
   static long N_OM_Get_From_Monitor_Cache_Success;
   static long N_OM_Set_Monitor_Cache;

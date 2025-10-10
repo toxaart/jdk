@@ -997,6 +997,9 @@ void Threads::destroy_vm() {
   log_info(os)("toxaart N_MonitorEntreHelper_Runtime1_Calls: %ld ", ObjectMonitor::N_MonitorEntreHelper_Runtime1_Calls);
 
   log_info(os)("toxaart N_Quick_Enter_Calls: %ld ", ObjectMonitor::N_Quick_Enter_Calls);
+  log_info(os)("toxaart N_Quick_Enter_Calls_Success: %ld ", ObjectMonitor::N_Quick_Enter_Calls_Success);
+  log_info(os)("toxaart N_BasicLock_OM_Cache_Calls: %ld ", ObjectMonitor::N_BasicLock_OM_Cache_Calls);
+  log_info(os)("toxaart N_BasicLock_OM_Cache_Calls_Success: %ld ", ObjectMonitor::N_BasicLock_OM_Cache_Calls_Success);
   log_info(os)("toxaart N_OM_Get_From_Monitor_Cache: %ld ", ObjectMonitor::N_OM_Get_From_Monitor_Cache);
   log_info(os)("toxaart N_OM_Get_From_Monitor_Cache_Success: %ld ", ObjectMonitor::N_OM_Get_From_Monitor_Cache_Success);
   log_info(os)("toxaart N_OM_Set_Monitor_Cache: %ld ", ObjectMonitor::N_OM_Set_Monitor_Cache);
