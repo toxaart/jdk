@@ -255,7 +255,14 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
   OMCacheEntry to_insert = { obj, monitor, 1 };
-  _entries[cnt % CAPACITY] = to_insert;
+
+  if (cnt > 1) {
+    _entries[cnt % CAPACITY] = _entries[1];
+    _entries[1] = _entries[0];
+  } else if (cnt == 1) {
+    _entries[1] = _entries[0];
+  }
+  _entries[0] = to_insert;
 
   /*
   const int end = OMCache::CAPACITY - 1;
