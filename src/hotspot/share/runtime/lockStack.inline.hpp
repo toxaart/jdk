@@ -252,6 +252,8 @@ inline void LockStack::oops_do(OopClosure* cl) {
 inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
 
   oop obj = monitor->object_peek();
+  assert(obj != nullptr, "must be alive");
+  assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
   OMCacheEntry to_insert = { obj, monitor, 1 };
   _entries[cnt % CAPACITY] = to_insert;
 
