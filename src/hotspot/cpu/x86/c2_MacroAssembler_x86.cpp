@@ -317,7 +317,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 #if 1
       // calculate the address of the last element of 4-element cache 
       mov(rax_reg, t);
-      increment(rax_reg, 8 * in_bytes(OMCache::oop_to_oop_difference()));
+      increment(rax_reg, 4 * in_bytes(OMCache::oop_to_oop_difference()));
 #endif
 
       const int num_unrolled = 2;
