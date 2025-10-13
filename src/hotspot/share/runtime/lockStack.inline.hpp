@@ -250,7 +250,7 @@ inline void LockStack::oops_do(OopClosure* cl) {
 }
 
 inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
-#if 0
+#if 1
   oop obj = monitor->object_peek();
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
