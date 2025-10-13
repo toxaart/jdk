@@ -338,7 +338,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       cmpptr(Address(t), 1);
       jcc(Assembler::below, slow_path_2); // 0 check, but with ZF=0 when *t == 0
       increment(t, in_bytes(OMCache::oop_to_oop_difference()));
-#if 1
+#if 0
       cmpptr(t, rax_reg);
       jcc(Assembler::below, loop);
       orl(t, 1); // ZF = 0
