@@ -250,7 +250,7 @@ inline void LockStack::oops_do(OopClosure* cl) {
 }
 
 inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
-
+#if 0
   oop obj = monitor->object_peek();
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
@@ -264,7 +264,8 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   }
   _entries[0] = to_insert;
 
-  /*
+#else
+
   const int end = OMCache::CAPACITY - 1;
 
   oop obj = monitor->object_peek();
@@ -284,7 +285,9 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
     // Swap with the most recent value.
     ::swap(to_insert, _entries[i]);
   }
-  _entries[end] = to_insert;*/
+  _entries[end] = to_insert;
+
+#endif
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
