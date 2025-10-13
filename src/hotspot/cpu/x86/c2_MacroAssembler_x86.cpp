@@ -314,9 +314,11 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Load cache address
       lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
 
+#if 0
       // calculate the address of the last element of 8-element cache 
       mov(rax_reg, t);
       increment(rax_reg, 8 * in_bytes(OMCache::oop_to_oop_difference()));
+#endif
 
       const int num_unrolled = 2;
       for (int i = 0; i < num_unrolled; i++) {
