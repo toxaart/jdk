@@ -264,6 +264,16 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   }
   _entries[0] = to_insert;
 
+
+
+
+
+
+  uint64_t slot = (cnt % (CAPACITY - 2)) + 2;
+  _entries[slot] = _entries[1];
+  _entries[1] = _entries[0];
+  _entries[0] = to_insert;
+
 #else
 
   const int end = OMCache::CAPACITY - 1;
