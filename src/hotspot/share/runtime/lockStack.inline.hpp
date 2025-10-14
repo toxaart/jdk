@@ -258,7 +258,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
 
   OMCacheEntry to_insert = {obj, monitor};
 
-  for (int i = 0; i < end; ++i) {
+  for (int i = 0; i <= end; ++i) {
     if (_entries[i]._oop == obj ||
         _entries[i]._monitor == nullptr ||
         _entries[i]._monitor->is_being_async_deflated()) {
@@ -269,10 +269,36 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
     // Swap with the most recent value.
     ::swap(to_insert, _entries[i]);
   }
-  _entries[end] = to_insert;
+
+  // handle L2
+  for (int i = 0; i < OMCache::CAPACITY_L2 - 1; ++i)
+  {
+    if (_entries_L2[i]._oop == obj ||
+      _entries_L2[i]._monitor == nullptr ||
+      _entries_L2[i]._monitor->is_being_async_deflated()) {
+      // Use stale slot.
+      _entries_L2[i] = to_insert;
+      return;
+    }
+    // Swap with the most recent value.
+    ::swap(to_insert, _entries_L2[i]);
+
+  }
+  _entries_L2[OMCache::CAPACITY_L2 - 1] = to_insert;
+}
+
+inline OMCache::OMCacheEntry OMCache::shift_down_from_L2() {
+  OMCache::OMCacheEntry result = _entries_L2[0];
+  int i = 0;
+  for (; i < CAPACITY_L2 - 1; ++i) {
+    _entries_L2[i] = _entries_L2[i + 1];
+  }
+  _entries_L2[i] = {};
+  return result;
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
+#if 0
   for (int i = 0; i < CAPACITY; ++i) {
     if (_entries[i]._oop == o) {
       assert(_entries[i]._monitor != nullptr, "monitor must exist");
@@ -290,12 +316,54 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
     }
   }
   return nullptr;
+#else
+
+  for (int i = 0; i < CAPACITY; ++i) {
+    if (_entries[i]._oop == o) {
+      assert(_entries[i]._monitor != nullptr, "monitor must exist");
+      if (_entries[i]._monitor->is_being_async_deflated()) {
+        // Bad monitor
+        // Shift down rest
+        for (; i < CAPACITY - 1; ++i) {
+          _entries[i] = _entries[i + 1];
+        }
+        // Shift from L2
+        _entries[i] = shift_down_from_L2();
+      }
+      return _entries[i]._monitor;
+    }
+  }
+
+  // Look in L2
+  for (int i = 0; i < CAPACITY_L2; ++i) {
+    if (_entries_L2[i]._oop == o) {
+      assert(_entries_L2[i]._monitor != nullptr, "monitor must exist");
+      if (_entries_L2[i]._monitor->is_being_async_deflated()) {
+        // Bad monitor
+        // Shift down rest
+        for (; i < CAPACITY_L2 - 1; ++i) {
+          _entries_L2[i] = _entries_L2[i + 1];
+        }
+        // Clear end
+        _entries_L2[i] = {};
+        return nullptr;
+      }
+      return _entries_L2[i]._monitor;
+    }
+  }
+  return nullptr;
+#endif
 }
 
 inline void OMCache::clear() {
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
     _entries[i] = {};
+  }
+
+  for (size_t i = 0; i < CAPACITY_L2; ++i) {
+    // Clear
+    _entries_L2[i] = {};
   }
 }
 
