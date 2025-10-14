@@ -386,11 +386,11 @@ inline void OMCache::clear() {
     // Clear
     _entries[i] = {};
   }
-
+  /*
   for (size_t i = 0; i < CAPACITY_L2; ++i) {
     // Clear
     _entries_L2[i] = {};
-  }
+  }*/
 }
 
 #endif // SHARE_RUNTIME_LOCKSTACK_INLINE_HPP
