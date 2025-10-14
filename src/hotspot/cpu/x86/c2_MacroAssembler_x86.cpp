@@ -311,6 +311,11 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
         increment(t, in_bytes(OMCache::oop_to_oop_difference()));
       }
 
+#if 1
+      orl(t, 1); // Fast Unlock ZF = 0
+      jmp(slow_path);
+#endif 
+
       Label loop;
 
       // Search for obj in cache.
