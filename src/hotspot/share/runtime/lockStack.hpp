@@ -132,8 +132,8 @@ class LockStack {
 class OMCache {
   friend class VMStructs;
  public:
-  static constexpr int CAPACITY = 8;
-  //static constexpr int CAPACITY_L2 = 6;
+  static constexpr int CAPACITY = 2;
+  static constexpr int CAPACITY_L2 = 6;
 
  private:
   struct OMCacheEntry {
@@ -142,7 +142,7 @@ class OMCache {
   } _entries[CAPACITY];
   const oop _null_sentinel = nullptr;
 
-  //OMCacheEntry _entries_L2[CAPACITY_L2];
+  OMCacheEntry _entries_L2[CAPACITY_L2];
 
  public:
   static ByteSize entries_offset() { return byte_offset_of(OMCache, _entries); }
@@ -152,7 +152,7 @@ class OMCache {
   explicit OMCache(JavaThread* jt);
 
   inline ObjectMonitor* get_monitor(oop o);
-  //inline OMCacheEntry shift_down_from_L2();
+  inline OMCacheEntry shift_down_from_L2();
   inline void set_monitor(ObjectMonitor* monitor);
   inline void clear();
 

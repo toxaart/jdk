@@ -251,7 +251,7 @@ inline void LockStack::oops_do(OopClosure* cl) {
 
 inline void OMCache::set_monitor(ObjectMonitor *monitor) {
 
-#if 1
+#if 0
   const int end = OMCache::CAPACITY - 1;
 
   oop obj = monitor->object_peek();
@@ -312,7 +312,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
 #endif
 }
 
-/*
+
 inline OMCache::OMCacheEntry OMCache::shift_down_from_L2() {
   OMCache::OMCacheEntry result = _entries_L2[0];
   int i = 0;
@@ -322,9 +322,9 @@ inline OMCache::OMCacheEntry OMCache::shift_down_from_L2() {
   _entries_L2[i] = {};
   return result;
 }
-*/
+
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
-#if 1
+#if 0
   for (int i = 0; i < CAPACITY; ++i) {
     if (_entries[i]._oop == o) {
       assert(_entries[i]._monitor != nullptr, "monitor must exist");
@@ -355,6 +355,7 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
         }
         // Shift from L2
         _entries[i] = shift_down_from_L2();
+        return nullptr;
       }
       return _entries[i]._monitor;
     }
@@ -386,11 +387,11 @@ inline void OMCache::clear() {
     // Clear
     _entries[i] = {};
   }
-  /*
+  
   for (size_t i = 0; i < CAPACITY_L2; ++i) {
     // Clear
     _entries_L2[i] = {};
-  }*/
+  }
 }
 
 #endif // SHARE_RUNTIME_LOCKSTACK_INLINE_HPP
