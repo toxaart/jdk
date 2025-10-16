@@ -234,6 +234,11 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
         increment(t3_t, in_bytes(OMCache::oop_to_oop_difference()));
       }
 
+#if 1
+      cmp(zr, rthread); // Set Flag to NE => slow path
+      b(slow_path);
+#endif
+
       Label loop;
 
       // Search for obj in cache.
