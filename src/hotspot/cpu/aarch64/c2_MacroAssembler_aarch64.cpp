@@ -220,38 +220,57 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 
     if (!UseObjectMonitorTable) {
       assert(t1_monitor == t1_mark, "should be the same here");
-    } else {
-      Label monitor_found;
+    }
+    else {
+      if (UseNewCode) {
+        mov(t3_t, obj);
+        lsr(t3_t, t3_t, 4);
+        andr(t3_t, t3_t, (OMCache::CAPACITY - 1));
+        lsl(t3_t, t3_t, 1);
 
-      // Load cache address
-      lea(t3_t, Address(rthread, JavaThread::om_cache_oops_offset()));
+        // lea(t3_t, Address(thread, t3_t, Address::times_ptr, JavaThread::om_cache_oops_offset()));
+        lea(t3_t, Address(rthread, t3_t, Address::lsl(3)));
+        add(t3_t, t3_t, (int)JavaThread::om_cache_oops_offset());
 
-      const int num_unrolled = 2;
-      for (int i = 0; i < num_unrolled; i++) {
+        ldr(t1, Address(t3_t));
+        cmp(obj, t1);
+        br(Assembler::NE, slow_path);
+        // Cache hit.
+        ldr(t1_monitor, Address(t3_t, OMCache::oop_to_monitor_difference()));
+      } else {
+
+        Label monitor_found;
+
+        // Load cache address
+        lea(t3_t, Address(rthread, JavaThread::om_cache_oops_offset()));
+
+        const int num_unrolled = 2;
+        for (int i = 0; i < num_unrolled; i++) {
+          ldr(t1, Address(t3_t));
+          cmp(obj, t1);
+          br(Assembler::EQ, monitor_found);
+          increment(t3_t, in_bytes(OMCache::oop_to_oop_difference()));
+        }
+
+        Label loop;
+
+        // Search for obj in cache.
+        bind(loop);
+
+        // Check for match.
         ldr(t1, Address(t3_t));
         cmp(obj, t1);
         br(Assembler::EQ, monitor_found);
+
+        // Search until null encountered, guaranteed _null_sentinel at end.
         increment(t3_t, in_bytes(OMCache::oop_to_oop_difference()));
+        cbnz(t1, loop);
+        // Cache Miss, NE set from cmp above, cbnz does not set flags
+        b(slow_path);
+
+        bind(monitor_found);
+        ldr(t1_monitor, Address(t3_t, OMCache::oop_to_monitor_difference()));
       }
-
-      Label loop;
-
-      // Search for obj in cache.
-      bind(loop);
-
-      // Check for match.
-      ldr(t1, Address(t3_t));
-      cmp(obj, t1);
-      br(Assembler::EQ, monitor_found);
-
-      // Search until null encountered, guaranteed _null_sentinel at end.
-      increment(t3_t, in_bytes(OMCache::oop_to_oop_difference()));
-      cbnz(t1, loop);
-      // Cache Miss, NE set from cmp above, cbnz does not set flags
-      b(slow_path);
-
-      bind(monitor_found);
-      ldr(t1_monitor, Address(t3_t, OMCache::oop_to_monitor_difference()));
     }
 
     const Register t2_owner_addr = t2;

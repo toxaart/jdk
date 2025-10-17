@@ -297,38 +297,50 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     if (!UseObjectMonitorTable) {
       assert(mark == monitor, "should be the same here");
     } else {
-      // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
-      // Fetch ObjectMonitor* from the cache or take the slow-path.
-      Label monitor_found;
+      if (UseNewCode) {
+        mov(rax_reg, obj);
+        shrptr(rax_reg, 4);
+        andptr(rax_reg, (OMCache::CAPACITY - 1));
+        shlptr(rax_reg, 1);
+        lea(t, Address(thread, rax_reg, Address::times_ptr, JavaThread::om_cache_oops_offset()));
+        cmpptr(obj, Address(t));
+        jccb(Assembler::notEqual, slow_path);
+        // Cache hit.
+        movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
+      } else {
+        // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
+        // Fetch ObjectMonitor* from the cache or take the slow-path.
+        Label monitor_found;
 
-      // Load cache address
-      lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
+        // Load cache address
+        lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
 
-      const int num_unrolled = 2;
-      for (int i = 0; i < num_unrolled; i++) {
+        const int num_unrolled = 2;
+        for (int i = 0; i < num_unrolled; i++) {
+          cmpptr(obj, Address(t));
+          jccb(Assembler::equal, monitor_found);
+          increment(t, in_bytes(OMCache::oop_to_oop_difference()));
+        }
+
+        Label loop;
+
+        // Search for obj in cache.
+        bind(loop);
+
+        // Check for match.
         cmpptr(obj, Address(t));
         jccb(Assembler::equal, monitor_found);
+
+        // Search until null encountered, guaranteed _null_sentinel at end.
+        cmpptr(Address(t), 1);
+        jcc(Assembler::below, slow_path); // 0 check, but with ZF=0 when *t == 0
         increment(t, in_bytes(OMCache::oop_to_oop_difference()));
+        jmpb(loop);
+
+        // Cache hit.
+        bind(monitor_found);
+        movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
       }
-
-      Label loop;
-
-      // Search for obj in cache.
-      bind(loop);
-
-      // Check for match.
-      cmpptr(obj, Address(t));
-      jccb(Assembler::equal, monitor_found);
-
-      // Search until null encountered, guaranteed _null_sentinel at end.
-      cmpptr(Address(t), 1);
-      jcc(Assembler::below, slow_path); // 0 check, but with ZF=0 when *t == 0
-      increment(t, in_bytes(OMCache::oop_to_oop_difference()));
-      jmpb(loop);
-
-      // Cache hit.
-      bind(monitor_found);
-      movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
     }
     const ByteSize monitor_tag = in_ByteSize(UseObjectMonitorTable ? 0 : checked_cast<int>(markWord::monitor_value));
     const Address recursions_address(monitor, ObjectMonitor::recursions_offset() - monitor_tag);

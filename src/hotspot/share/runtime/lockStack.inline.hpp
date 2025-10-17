@@ -249,6 +249,11 @@ inline void LockStack::oops_do(OopClosure* cl) {
   verify("post-oops-do");
 }
 
+static int om_cache_hash(void* obj)
+{
+  return (int)((((uintptr_t)obj) >> 4) & (OMCache::CAPACITY - 1));
+}
+
 inline void OMCache::set_monitor(ObjectMonitor *monitor) {
   const int end = OMCache::CAPACITY - 1;
 
@@ -256,8 +261,12 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
 
+  if (UseNewCode) {
+    int slot = om_cache_hash(obj);
+    _entries[slot]._oop = obj;
+    _entries[slot]._monitor = monitor;
+  } else {
   OMCacheEntry to_insert = {obj, monitor};
-
   for (int i = 0; i < end; ++i) {
     if (_entries[i]._oop == obj ||
         _entries[i]._monitor == nullptr ||
@@ -270,9 +279,23 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
     ::swap(to_insert, _entries[i]);
   }
   _entries[end] = to_insert;
+  }
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
+  if (UseNewCode) {
+    int slot = om_cache_hash(o);
+    if (_entries[slot]._oop == o) {
+      assert(_entries[slot]._monitor != nullptr, "monitor must exist");
+      //_entries[slot]._oop = o;
+      if (_entries[slot]._monitor->is_being_async_deflated()) {
+        _entries[slot] = {};
+        return nullptr;
+      }
+      return _entries[slot]._monitor;
+    }
+    return nullptr;
+  } else {
   for (int i = 0; i < CAPACITY; ++i) {
     if (_entries[i]._oop == o) {
       assert(_entries[i]._monitor != nullptr, "monitor must exist");
@@ -290,6 +313,7 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
     }
   }
   return nullptr;
+  }
 }
 
 inline void OMCache::clear() {
