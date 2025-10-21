@@ -309,49 +309,24 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     else {
       // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
       // Fetch ObjectMonitor* from the cache or take the slow-path.
+#if 1
       Label monitor_found;
 
-      // Load cache address
-      lea(t, Address(thread, JavaThread::om_cache_oops_offset()));
-
-#if 1
-      // calculate the address of the last element of 4-element cache 
-      mov(rax_reg, t);
-      increment(rax_reg, 4 * in_bytes(OMCache::oop_to_oop_difference()));
-#endif
-
-      const int num_unrolled = 2;
-      for (int i = 0; i < num_unrolled; i++) {
-        cmpptr(obj, Address(t));
-        jccb(Assembler::equal, monitor_found);
-        increment(t, in_bytes(OMCache::oop_to_oop_difference()));
-      }
-
-      Label loop;
-
-      // Search for obj in cache.
-      bind(loop);
-
-      // Check for match.
+      // Calculate:
+      // rax_reg = ((mark >> hash_shift) & capacity_mask) * (sizeof(_entries[0]) / sizeof(void *))
+      mov(rax_reg, mark);
+      shrptr(rax_reg, markWord::hash_shift - 1);
+      andptr(rax_reg, OMCache::capacity_mask << 1);
+      lea(t, Address(thread, rax_reg, Address::times_ptr, JavaThread::om_cache_oops_offset()));
       cmpptr(obj, Address(t));
-      jccb(Assembler::equal, monitor_found);
-
-      // Search until null encountered, guaranteed _null_sentinel at end.
-      cmpptr(Address(t), 1);
-      jcc(Assembler::below, slow_path_2); // 0 check, but with ZF=0 when *t == 0
-      increment(t, in_bytes(OMCache::oop_to_oop_difference()));
-#if 1
-      cmpptr(t, rax_reg);
-      jcc(Assembler::below, loop);
-      orl(t, 1); // ZF = 0
-      jmpb(slow_path_2);
+      jccb(Assembler::notEqual, slow_path);
+     
+      movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
 #else
-      jmpb(loop);
+
 #endif
 
-      // Cache hit.
-      bind(monitor_found);
-      movptr(monitor, Address(t, OMCache::oop_to_monitor_difference()));
+
       increment(Address(t, OMCache::oop_to_found_cnt_difference()));
 
       const Address access_cnt_address{ monitor, ObjectMonitor::access_cnt_offset() };
