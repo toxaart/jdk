@@ -310,8 +310,6 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
       // Fetch ObjectMonitor* from the cache or take the slow-path.
 #if 1
-      Label monitor_found;
-
       // Calculate:
       // rax_reg = ((mark >> hash_shift) & capacity_mask) * (sizeof(_entries[0]) / sizeof(void *))
       mov(rax_reg, mark);
