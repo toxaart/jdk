@@ -249,7 +249,7 @@ inline void LockStack::oops_do(OopClosure* cl) {
   verify("post-oops-do");
 }
 
-#if 1
+#if 0
 static int om_cache_hash(void* obj)
 {
   return (int)((((uintptr_t)obj) >> 4) & OMCache::capacity_mask);
@@ -264,7 +264,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
 
   if (UseNewCode) {
-#if 1
+#if 0
     int slot = om_cache_hash(obj);
 #else
     markWord mark = obj->mark_acquire();
@@ -293,7 +293,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor) {
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
   if (UseNewCode) {
-#if 1
+#if 0
     int slot = om_cache_hash(o);
 #else
     markWord mark = o->mark_acquire();
