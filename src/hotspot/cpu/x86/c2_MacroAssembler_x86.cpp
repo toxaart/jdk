@@ -309,7 +309,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     else {
       // Uses ObjectMonitorTable.  Look for the monitor in the om_cache.
       // Fetch ObjectMonitor* from the cache or take the slow-path.
-#if 1     
+#if 0     
       mov(rax_reg, obj);
       shrptr(rax_reg, 4);
       andptr(rax_reg, OMCache::capacity_mask);
@@ -322,8 +322,9 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       // Calculate:
       // rax_reg = ((mark >> hash_shift) & capacity_mask) * (sizeof(_entries[0]) / sizeof(void *))
       mov(rax_reg, mark);
-      shrptr(rax_reg, markWord::hash_shift - 1);
-      andptr(rax_reg, OMCache::capacity_mask << 1);
+      shrptr(rax_reg, markWord::hash_shift);
+      andptr(rax_reg, OMCache::capacity_mask);
+      shlptr(rax_reg, 2);
       lea(t, Address(thread, rax_reg, Address::times_ptr, JavaThread::om_cache_oops_offset()));
       cmpptr(obj, Address(t));
       jcc(Assembler::notEqual, slow_path_2);
