@@ -249,10 +249,12 @@ inline void LockStack::oops_do(OopClosure* cl) {
   verify("post-oops-do");
 }
 
+#if 0
 static int om_cache_hash(void* obj)
 {
   return (int)((((uintptr_t)obj) >> 4) & (OMCache::CAPACITY - 1));
 }
+#endif
 
 inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   oop obj = monitor->object_peek();
