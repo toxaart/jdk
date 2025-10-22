@@ -259,7 +259,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
   OMCacheEntry to_insert = { obj, monitor, 1 };
-#if 0
+#if 1
   markWord mark = obj->mark_acquire();
   intptr_t hash = mark.hash();
   assert(hash != 0, "must be");
@@ -272,7 +272,7 @@ inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
-#if 0
+#if 1
   markWord mark = o->mark_acquire();
   intptr_t hash = mark.hash();
   int slot = checked_cast<int>(hash & OMCache::capacity_mask);
