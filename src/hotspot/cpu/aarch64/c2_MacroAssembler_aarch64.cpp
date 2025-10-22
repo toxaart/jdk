@@ -223,7 +223,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     }
     else {
       if (UseNewCode) {
-#if 0
+#if 1
         mov(t3_t, obj);
         lsr(t3_t, t3_t, 4);
         andr(t3_t, t3_t, OMCache::capacity_mask);

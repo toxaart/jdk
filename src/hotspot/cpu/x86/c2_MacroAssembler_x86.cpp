@@ -298,7 +298,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       assert(mark == monitor, "should be the same here");
     } else {
       if (UseNewCode) {
-#if 0
+#if 1
         mov(rax_reg, obj);
         shrptr(rax_reg, 4);
         andptr(rax_reg, OMCache::capacity_mask);
