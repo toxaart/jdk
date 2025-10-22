@@ -223,9 +223,10 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
     }
     else {
       if (UseNewCode) {
+#if 0
         mov(t3_t, obj);
         lsr(t3_t, t3_t, 4);
-        andr(t3_t, t3_t, (OMCache::CAPACITY - 1));
+        andr(t3_t, t3_t, OMCache::capacity_mask);
         lsl(t3_t, t3_t, 1);
 
         // lea(t3_t, Address(thread, t3_t, Address::times_ptr, JavaThread::om_cache_oops_offset()));
@@ -237,6 +238,22 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
         br(Assembler::NE, slow_path);
         // Cache hit.
         ldr(t1_monitor, Address(t3_t, OMCache::oop_to_monitor_difference()));
+#else
+        // Calculate:
+        // t3_t = ((mark >> hash_shift) & capacity_mask) * (sizeof(_entries[0]) / sizeof(void *))
+        lsr(t3_t, t1_mark, markWord::hash_shift);
+        andr(t3_t, t3_t, OMCache::capacity_mask);
+        lsl(t3_t, t3_t, 1);
+
+        // lea(t3_t, Address(thread, t3_t, Address::times_ptr, JavaThread::om_cache_oops_offset()));
+        lea(t3_t, Address(rthread, t3_t, Address::lsl(3)));
+        add(t3_t, t3_t, (int)JavaThread::om_cache_oops_offset());
+        ldr(t1, Address(t3_t));
+        cmp(obj, t1);
+        br(Assembler::NE, slow_path);
+        // Cache hit.
+        ldr(t1_monitor, Address(t3_t, OMCache::oop_to_monitor_difference()));
+#endif
       } else {
 
         Label monitor_found;
