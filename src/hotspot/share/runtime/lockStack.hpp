@@ -140,6 +140,7 @@ class OMCache {
     oop _oop = nullptr;
     ObjectMonitor* _monitor = nullptr;
     uint64_t _found_cnt;
+    uint64_t _pad;
   } _entries[CAPACITY];
   const oop _null_sentinel = nullptr;
 

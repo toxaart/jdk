@@ -313,7 +313,7 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
       mov(rax_reg, obj);
       shrptr(rax_reg, 4);
       andptr(rax_reg, OMCache::capacity_mask);
-      shlptr(rax_reg, 1);
+      shlptr(rax_reg, 2);
       lea(t, Address(thread, rax_reg, Address::times_ptr, JavaThread::om_cache_oops_offset()));
       cmpptr(obj, Address(t));
       jcc(Assembler::notEqual, slow_path_2);
