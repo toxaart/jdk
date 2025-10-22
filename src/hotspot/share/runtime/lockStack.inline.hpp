@@ -249,24 +249,36 @@ inline void LockStack::oops_do(OopClosure* cl) {
   verify("post-oops-do");
 }
 
+static int om_cache_hash(void* obj)
+{
+  return (int)((((uintptr_t)obj) >> 4) & (OMCache::CAPACITY - 1));
+}
+
 inline void OMCache::set_monitor(ObjectMonitor *monitor, uint64_t cnt) {
   oop obj = monitor->object_peek();
   assert(obj != nullptr, "must be alive");
   assert(monitor == LightweightSynchronizer::get_monitor_from_table(JavaThread::current(), obj), "must exist in table");
   OMCacheEntry to_insert = { obj, monitor, 1 };
-
+#if 0
   markWord mark = obj->mark_acquire();
   intptr_t hash = mark.hash();
   assert(hash != 0, "must be");
   int slot = checked_cast<int>(hash & OMCache::capacity_mask);
+#else
+  int slot = om_cache_hash(obj);
+#endif
   _entries[slot]._oop = obj;
   _entries[slot]._monitor = monitor;
 }
 
 inline ObjectMonitor* OMCache::get_monitor(oop o) {
+#if 0
   markWord mark = o->mark_acquire();
   intptr_t hash = mark.hash();
   int slot = checked_cast<int>(hash & OMCache::capacity_mask);
+#else
+  int slot = om_cache_hash(o);
+#endif
   if (_entries[slot]._oop == o) {
     assert(_entries[slot]._monitor != nullptr, "monitor must exist");
     if (!_entries[slot]._monitor->is_being_async_deflated()) {
