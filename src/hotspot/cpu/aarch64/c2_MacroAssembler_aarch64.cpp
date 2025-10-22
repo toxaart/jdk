@@ -241,10 +241,9 @@ void C2_MacroAssembler::fast_lock_lightweight(Register obj, Register box, Regist
 #else
         // Calculate:
         // t3_t = ((mark >> hash_shift) & capacity_mask) * (sizeof(_entries[0]) / sizeof(void *))
-        lsr(t3_t, t1_mark, markWord::hash_shift);
-        andr(t3_t, t3_t, OMCache::capacity_mask);
-        lsl(t3_t, t3_t, 1);
-
+        lsr(t3_t, t1_mark, markWord::hash_shift - 1);
+        andr(t3_t, t3_t, OMCache::capacity_mask << 1);
+ 
         // lea(t3_t, Address(thread, t3_t, Address::times_ptr, JavaThread::om_cache_oops_offset()));
         lea(t3_t, Address(rthread, t3_t, Address::lsl(3)));
         add(t3_t, t3_t, (int)JavaThread::om_cache_oops_offset());
