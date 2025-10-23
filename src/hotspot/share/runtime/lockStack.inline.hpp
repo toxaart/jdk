@@ -332,18 +332,18 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 }
 
 inline void OMCache::clear() {
-  jlong t0 = os::javaTimeNanos();
+  //jlong t0 = os::javaTimeNanos();
 #if 1
-  memset((void*) & _entries[0], 0, (sizeof(oop) + sizeof(ObjectMonitor*)) * CAPACITY);
+  memset((void*) & _entries[0], 0, sizeof(OMCacheEntry) * CAPACITY);
 #else
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
     _entries[i] = {};
   }
 #endif
-  jlong t1 = os::javaTimeNanos();
-  ObjectMonitor::accumlated_om_cache_clean_time += t1 - t0;
-  ObjectMonitor::n_calls_omcache_clean++;
+  //jlong t1 = os::javaTimeNanos();
+  //ObjectMonitor::accumlated_om_cache_clean_time += t1 - t0;
+  //ObjectMonitor::n_calls_omcache_clean++;
 }
 
 #endif // SHARE_RUNTIME_LOCKSTACK_INLINE_HPP
