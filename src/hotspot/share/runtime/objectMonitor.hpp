@@ -217,6 +217,9 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
 
   static int Knob_SpinLimit;
 
+  static jlong accumlated_om_cache_clean_time;
+  static long n_calls_omcache_clean;
+
   static ByteSize metadata_offset()    { return byte_offset_of(ObjectMonitor, _metadata); }
   static ByteSize owner_offset()       { return byte_offset_of(ObjectMonitor, _owner); }
   static ByteSize recursions_offset()  { return byte_offset_of(ObjectMonitor, _recursions); }

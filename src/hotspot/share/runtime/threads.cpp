@@ -958,6 +958,8 @@ void Threads::destroy_vm() {
       nu.wait(0);
   }
 
+  log_info(os)("toxaart avg OMCache clean time: %e // ", static_cast<double>(ObjectMonitor::accumlated_om_cache_clean_time) / static_cast<double>(ObjectMonitor::n_calls_omcache_clean));
+
   EventShutdown e;
   if (e.should_commit()) {
     e.set_reason("No remaining non-daemon Java threads");

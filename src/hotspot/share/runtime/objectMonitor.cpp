@@ -2324,6 +2324,9 @@ static int Knob_Poverty             = 1000;
 static int Knob_FixedSpin           = 0;
 static int Knob_PreSpin             = 10;      // 20-100 likely better, but it's not better in my testing.
 
+jlong ObjectMonitor::accumlated_om_cache_clean_time = 0;
+long ObjectMonitor::n_calls_omcache_clean = 0;
+
 inline static int adjust_up(int spin_duration) {
   int x = spin_duration;
   if (x < ObjectMonitor::Knob_SpinLimit) {
