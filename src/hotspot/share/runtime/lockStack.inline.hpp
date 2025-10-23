@@ -332,10 +332,14 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 }
 
 inline void OMCache::clear() {
+#if 1
+  memset(_entries, 0, sizeof(OMCacheEntry) * CAPACITY);
+#else
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
     _entries[i] = {};
   }
+#endif
 }
 
 #endif // SHARE_RUNTIME_LOCKSTACK_INLINE_HPP
