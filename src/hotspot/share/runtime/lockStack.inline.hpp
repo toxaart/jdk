@@ -333,7 +333,7 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 
 inline void OMCache::clear() {
 #if 1
-  memset(_entries, 0, sizeof(OMCacheEntry) * CAPACITY);
+  memset(&_entries[0], 0, (sizeof(oop) + sizeof(ObjectMonitor*)) * CAPACITY);
 #else
   for (size_t i = 0; i < CAPACITY; ++i) {
     // Clear
