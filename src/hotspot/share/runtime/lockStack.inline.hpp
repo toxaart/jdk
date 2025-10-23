@@ -333,7 +333,7 @@ inline ObjectMonitor* OMCache::get_monitor(oop o) {
 
 inline void OMCache::clear() {
   jlong t0 = os::javaTimeNanos();
-#if 0
+#if 1
   memset((void*)&_entries[0], 0, sizeof(OMCacheEntry) * CAPACITY);
 #else
   for (size_t i = 0; i < CAPACITY; ++i) {
