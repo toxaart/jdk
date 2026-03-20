@@ -400,6 +400,7 @@ class ObjectMonitor : public CHeapObj<mtObjectMonitor> {
   ObjectWaiter* dequeue_waiter();
   void      dequeue_specific_waiter(ObjectWaiter* waiter);
   void      enter_internal(JavaThread* current, ObjectWaiter* current_node, bool reenter_path);
+  void      reenter_internal(JavaThread* current, ObjectWaiter* currentNode);
   bool      try_enter_fast(JavaThread* current, ObjectWaiter* current_node);
   void      entry_list_build_dll(JavaThread* current);
   void      unlink_after_acquire(JavaThread* current, ObjectWaiter* current_node);

@@ -1717,6 +1717,98 @@ void ObjectMonitor::ClearSuccOnSuspend::operator()(JavaThread* current) {
   }
 }
 
+void ObjectMonitor::reenter_internal(JavaThread* current, ObjectWaiter* currentNode) {
+  assert(current != nullptr, "invariant");
+  assert(current->thread_state() != _thread_blocked, "invariant");
+  assert(currentNode != nullptr, "invariant");
+  assert(currentNode->_thread == current, "invariant");
+  assert(_waiters > 0, "invariant");
+  assert_mark_word_consistency();
+
+  // If there are unmounted virtual threads ahead in the _entry_list we want
+  // to do a timed-park instead to alleviate some deadlock cases where one
+  // of them is picked as the successor but cannot run due to having run out
+  // of carriers. This can happen, for example, if a mixed of unmounted and
+  // pinned vthreads taking up all the carriers are waiting for a class to be
+  // initialized, and the selected successor is one of the unmounted vthreads.
+  // Although this method is used for the "notification" case, it could be
+  // that this thread reached here without been added to the _entry_list yet.
+  // This can happen if it was interrupted or the wait timed-out at the same
+  // time. In that case we rely on currentNode->_do_timed_park, which will be
+  // read on the next loop iteration, after consuming the park permit set by
+  // the notifier in notify_internal.
+  // Note that we can have false positives where timed-park is not necessary.
+  bool do_timed_parked = has_unmounted_vthreads();
+  jlong recheck_interval = 1;
+
+  for (;;) {
+    ObjectWaiter::TStates v = currentNode->TState;
+    guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
+    assert(!has_owner(current), "invariant");
+
+    // This thread has been notified so try to reacquire the lock.
+    if (try_lock(current) == TryLockResult::Success) {
+      break;
+    }
+
+    // If that fails, spin again.  Note that spin count may be zero so the above TryLock
+    // is necessary.
+    if (try_spin(current)) {
+      break;
+    }
+
+    {
+      OSThreadContendState osts(current->osthread());
+
+      assert(current->thread_state() == _thread_in_vm, "invariant");
+
+      {
+        ClearSuccOnSuspend csos(this);
+        ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+        if (do_timed_parked) {
+          current->_ParkEvent->park(recheck_interval);
+          // Increase the recheck_interval, but clamp the value.
+          recheck_interval *= 8;
+          if (recheck_interval > MAX_RECHECK_INTERVAL) {
+            recheck_interval = MAX_RECHECK_INTERVAL;
+          }
+        } else {
+          current->_ParkEvent->park();
+        }
+      }
+    }
+
+    // Try again, but just so we distinguish between futile wakeups and
+    // successful wakeups.  The following test isn't algorithmically
+    // necessary, but it helps us maintain sensible statistics.
+    if (try_lock(current) == TryLockResult::Success) {
+      break;
+    }
+
+    // The lock is still contested.
+
+    // Assuming this is not a spurious wakeup we'll normally
+    // find that _succ == current.
+    if (has_successor(current)) clear_successor();
+
+    // Invariant: after clearing _succ a contending thread
+    // *must* retry  _owner before parking.
+    OrderAccess::fence();
+
+    // See comment in notify_internal
+    do_timed_parked |= currentNode->_do_timed_park;
+  }
+
+  // Current has acquired the lock -- Unlink current from the _entry_list.
+  assert(has_owner(current), "invariant");
+  assert_mark_word_consistency();
+  unlink_after_acquire(current, currentNode);
+  if (has_successor(current)) clear_successor();
+  assert(!has_successor(current), "invariant");
+  currentNode->TState = ObjectWaiter::TS_RUN;
+  OrderAccess::fence();      // see comments at the end of enter_internal()
+}
+
 // -----------------------------------------------------------------------------
 // Wait/Notify/NotifyAll
 //
@@ -1922,6 +2014,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       // This means the thread has been un-parked and added to the entry_list
       // in notify_internal, i.e. notified while waiting.
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
+#ifdef FALSE
       ExitOnSuspend eos(this);
       {
         ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
@@ -1945,6 +2038,10 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
         enter(current, false /* post_jvmti_events */);
       }
       assert(has_owner(current), "invariant");
+#else
+      reenter_internal(current, &node);
+#endif
+
       node.wait_reenter_end(this);
     }
 
