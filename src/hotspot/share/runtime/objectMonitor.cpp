@@ -1895,6 +1895,9 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     }*/
 
     if (JvmtiExport::should_post_monitor_waited()) {
+      if (node.TState != ObjectWaiter::TS_ENTER) {
+        ThreadBlockInVM tbvm(current, true);
+      }
       JvmtiExport::post_monitor_waited(current, this, ret == OS_TIMEOUT);
     }
 
