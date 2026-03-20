@@ -2894,12 +2894,12 @@ void JvmtiExport::post_monitor_wait(JavaThread *thread, oop object,
   }
 }
 
-void JvmtiExport::post_monitor_waited(JavaThread *thread, ObjectMonitor *obj_mntr, jboolean timed_out) {
+void JvmtiExport::post_monitor_waited(JavaThread *thread, ObjectMonitor *obj_mntr, jboolean timed_out, bool allow_suspend) {
   oop object = obj_mntr->object();
   HandleMark hm(thread);
   Handle h(thread, object);
 
-  JvmtiThreadState *state = get_jvmti_thread_state(thread);
+  JvmtiThreadState *state = get_jvmti_thread_state(thread, allow_suspend);
   if (state == nullptr) {
     return;
   }

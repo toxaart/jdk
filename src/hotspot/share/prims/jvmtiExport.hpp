@@ -401,7 +401,7 @@ class JvmtiExport : public AllStatic {
   static void post_monitor_contended_enter(JavaThread *thread, ObjectMonitor *obj_mntr) NOT_JVMTI_RETURN;
   static void post_monitor_contended_entered(JavaThread *thread, ObjectMonitor *obj_mntr) NOT_JVMTI_RETURN;
   static void post_monitor_wait(JavaThread *thread, oop obj, jlong timeout) NOT_JVMTI_RETURN;
-  static void post_monitor_waited(JavaThread *thread, ObjectMonitor *obj_mntr, jboolean timed_out) NOT_JVMTI_RETURN;
+  static void post_monitor_waited(JavaThread *thread, ObjectMonitor *obj_mntr, jboolean timed_out, bool allow_suspend = true) NOT_JVMTI_RETURN;
   static void vthread_post_monitor_waited(JavaThread *current, ObjectMonitor *obj_mntr, jboolean timed_out) NOT_JVMTI_RETURN;
   static void post_object_free(JvmtiEnv* env, GrowableArray<jlong>* objects) NOT_JVMTI_RETURN;
   static void post_resource_exhausted(jint resource_exhausted_flags, const char* detail) NOT_JVMTI_RETURN;
