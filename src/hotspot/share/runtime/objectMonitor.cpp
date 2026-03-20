@@ -64,6 +64,11 @@
 #include "jfr/support/jfrFlush.hpp"
 #endif
 
+#define USE_CSOS_CASE_ONE 1
+#define USE_REENTER_INTERNAL 1
+#define USE_OLD_NOTIFY_INTERNAL 1
+#define USE_OLD_VTHREAD_WAIT_REENTER 1
+
 #ifdef DTRACE_ENABLED
 
 // Only bother with this argument setup if dtrace is available
@@ -1928,9 +1933,12 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     assert(current->thread_state() == _thread_in_vm, "invariant");
 
     {
-      //ThreadBlockInVM tbivm(current, false /* allow_suspend */);
+#if !USE_CSOS_CASE_ONE
+      ThreadBlockInVM tbivm(current, false /* allow_suspend */);
+#else
       ClearSuccOnSuspend csos(this);
       ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+#endif
       if (interrupted || HAS_PENDING_EXCEPTION) {
         // Intentionally empty
       } else if (node.TState == ObjectWaiter::TS_WAIT) {
@@ -1984,7 +1992,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     // An event could have been enabled after notification, in this case
     // a thread will have TS_ENTER state and posting the event may hit a suspension point.
     // From a debugging perspective, it is more important to have no missing events.
-#ifdef FALSE
+#if !USE_OLD_NOTIFY_INTERNAL
     if (interruptible && JvmtiExport::should_post_monitor_waited() && node.TState != ObjectWaiter::TS_ENTER) {
 
       // Process suspend requests now if any, before posting the event.
@@ -2040,7 +2048,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       // This means the thread has been un-parked and added to the entry_list
       // in notify_internal, i.e. notified while waiting.
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
-#ifdef FALSE
+#if !USE_REENTER_INTERNAL
       ExitOnSuspend eos(this);
       {
         ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
@@ -2116,7 +2124,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
 // we might just dequeue a thread from the wait_set and directly unpark() it.
 
 bool ObjectMonitor::notify_internal(JavaThread* current) {
-#ifdef FALSE
+#if !USE_OLD_NOTIFY_INTERNAL
   bool did_notify = false;
   SpinCriticalSection scs(&_wait_set_lock);
   ObjectWaiter* iterator = dequeue_waiter();
@@ -2374,6 +2382,7 @@ void ObjectMonitor::vthread_wait(JavaThread* current, jlong millis, bool interru
 }
 
 bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node, ContinuationWrapper& cont) {
+#if !USE_OLD_VTHREAD_WAIT_REENTER
   // The first time we run after being preempted on Object.wait() we
   // need to check if we were interrupted or the wait timed-out, and
   // in that case remove ourselves from the _wait_set queue.
@@ -2430,6 +2439,59 @@ bool ObjectMonitor::vthread_wait_reenter(JavaThread* current, ObjectWaiter* node
     add_to_contentions(1);
   }
   return false;
+#else
+  // The first time we run after being preempted on Object.wait() we
+  // need to check if we were interrupted or the wait timed-out, and
+  // in that case remove ourselves from the _wait_set queue.
+  if (node->TState == ObjectWaiter::TS_WAIT) {
+    SpinCriticalSection scs(&_wait_set_lock);
+    if (node->TState == ObjectWaiter::TS_WAIT) {
+      dequeue_specific_waiter(node);       // unlink from wait_set
+      node->TState = ObjectWaiter::TS_RUN;
+    }
+  }
+
+  // If this was an interrupted case, set the _interrupted boolean so that
+  // once we re-acquire the monitor we know if we need to throw IE or not.
+  ObjectWaiter::TStates state = node->TState;
+  bool was_notified = state == ObjectWaiter::TS_ENTER;
+  assert(was_notified || state == ObjectWaiter::TS_RUN, "");
+  node->_interrupted = node->_interruptible && !was_notified && current->is_interrupted(false);
+
+  // Post JFR and JVMTI events. If non-interruptible we are in
+  // ObjectLocker case so we don't post anything.
+  EventJavaMonitorWait wait_event;
+  if (node->_interruptible && (wait_event.should_commit() || JvmtiExport::should_post_monitor_waited())) {
+    vthread_monitor_waited_event(current, node, cont, &wait_event, !was_notified && !node->_interrupted);
+  }
+
+  // Mark that we are at reenter so that we don't call this method again.
+  node->_at_reenter = true;
+
+  if (!was_notified) {
+    bool acquired = vthread_monitor_enter(current, node);
+    if (acquired) {
+      guarantee(_recursions == 0, "invariant");
+      _recursions = node->_recursions;   // restore the old recursion count
+      _waiters--;                        // decrement the number of waiters
+
+      if (node->_interrupted) {
+        // We will throw at thaw end after finishing the mount transition.
+        current->set_pending_interrupted_exception(true);
+      }
+
+      delete node;
+      // Clear the ObjectWaiter* from the vthread.
+      java_lang_VirtualThread::set_objectWaiter(current->vthread(), nullptr);
+      return true;
+    }
+  }
+  else {
+    // Already moved to _entry_list by notifier, so just add to contentions.
+    add_to_contentions(1);
+  }
+  return false;
+#endif
 }
 
 // -----------------------------------------------------------------------------
