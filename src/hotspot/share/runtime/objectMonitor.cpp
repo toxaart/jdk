@@ -597,12 +597,12 @@ void ObjectMonitor::enter_with_contention_mark(JavaThread* current, ObjectMonito
 
     for (;;) {
       ExitOnSuspend eos(this);
-      {
-        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
+      {    
         if (!try_enter_fast(current, &node)) {
           enter_internal(current, &node, false /* reenter_path */);
         }
         current->set_current_pending_monitor(nullptr);
+        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
         // as having "-locked" the monitor, but the OS and java.lang.Thread
