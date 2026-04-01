@@ -1038,16 +1038,21 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
       }
     }
 
-    // park self
-    if (do_timed_park) {
-      current->_ParkEvent->park(recheck_interval);
-      // Increase the recheck_interval, but clamp the value.
-      recheck_interval *= 8;
-      if (recheck_interval > MAX_RECHECK_INTERVAL) {
-        recheck_interval = MAX_RECHECK_INTERVAL;
+    {
+      ClearSuccOnSuspend csos(this);
+      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+      // park self
+      if (do_timed_park) {
+        current->_ParkEvent->park(recheck_interval);
+        // Increase the recheck_interval, but clamp the value.
+        recheck_interval *= 8;
+        if (recheck_interval > MAX_RECHECK_INTERVAL) {
+          recheck_interval = MAX_RECHECK_INTERVAL;
+        }
       }
-    } else {
-      current->_ParkEvent->park();
+      else {
+        current->_ParkEvent->park();
+      }
     }
 
     // Try again, but just so we distinguish between futile wakeups and
@@ -1724,6 +1729,15 @@ static void vthread_monitor_waited_event(JavaThread* current, ObjectWaiter* node
   current->frame_anchor()->clear();
 }
 
+void ObjectMonitor::ClearSuccOnSuspend::operator()(JavaThread* current) {
+  if (current->is_suspended()) {
+    if (_om->has_successor(current)) {
+      _om->clear_successor();
+      OrderAccess::fence(); // always do a full fence when successor is cleared
+    }
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Wait/Notify/NotifyAll
 //
@@ -1843,7 +1857,9 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     assert(current->thread_state() == _thread_in_vm, "invariant");
 
     {
-      ThreadBlockInVM tbivm(current, false /* allow_suspend */);
+      //ThreadBlockInVM tbivm(current, false /* allow_suspend */);
+      ClearSuccOnSuspend csos(this);
+      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
       if (interrupted || HAS_PENDING_EXCEPTION) {
         // Intentionally empty
       } else if (node.TState == ObjectWaiter::TS_WAIT) {
@@ -1934,7 +1950,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
       ExitOnSuspend eos(this);
       {
-        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
+        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, false /* allow_suspend */);
         assert( _waiters > 0, "invariant");
         OSThreadContendState osts(current->osthread());
         enter_internal(current, &node, true /* reenter_path */);
