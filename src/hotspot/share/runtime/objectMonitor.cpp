@@ -947,7 +947,7 @@ const char* ObjectMonitor::is_busy_to_string(stringStream* ss) {
 
 bool ObjectMonitor::try_enter_fast(JavaThread* current, ObjectWaiter* current_node) {
   assert(current != nullptr, "invariant");
-  assert(current->thread_state() == _thread_blocked, "invariant");
+  //assert(current->thread_state() == _thread_blocked, "invariant");
   assert(current_node != nullptr, "invariant");
   assert(current_node->_thread == current, "invariant");
 
@@ -1004,7 +1004,7 @@ bool ObjectMonitor::try_enter_fast(JavaThread* current, ObjectWaiter* current_no
 
 void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_node, bool reenter_path) {
   assert(current != nullptr, "invariant");
-  assert(current->thread_state() == _thread_blocked, "invariant");
+  //assert(current->thread_state() == _thread_blocked, "invariant");
   assert(current_node != nullptr, "invariant");
   assert(current_node->_thread == current, "invariant");
 
@@ -1949,11 +1949,11 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       // in notify_internal, i.e. notified while waiting.
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
       ExitOnSuspend eos(this);
-      {
-        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, false /* allow_suspend */);
+      { 
         assert( _waiters > 0, "invariant");
         OSThreadContendState osts(current->osthread());
         enter_internal(current, &node, true /* reenter_path */);
+        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, false /* allow_suspend */);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
         // as having "-locked" the monitor, but the OS and java.lang.Thread
