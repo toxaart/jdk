@@ -1040,7 +1040,7 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
 
     {
       ClearSuccOnSuspend csos(this);
-      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, reenter_path /* allow_suspend */);
       // park self
       if (do_timed_park) {
         current->_ParkEvent->park(recheck_interval);
@@ -1953,7 +1953,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
         assert( _waiters > 0, "invariant");
         OSThreadContendState osts(current->osthread());
         enter_internal(current, &node, true /* reenter_path */);
-        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, false /* allow_suspend */);
+        ThreadBlockInVMPreprocess<ExitOnSuspend> tbivs(current, eos, true /* allow_suspend */);
         // We can go to a safepoint at the end of this block. If we
         // do a thread dump during that safepoint, then this thread will show
         // as having "-locked" the monitor, but the OS and java.lang.Thread
