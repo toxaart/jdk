@@ -1859,7 +1859,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     {
       //ThreadBlockInVM tbivm(current, false /* allow_suspend */);
       ClearSuccOnSuspend csos(this);
-      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, false /* allow_suspend */);
       if (interrupted || HAS_PENDING_EXCEPTION) {
         // Intentionally empty
       } else if (node.TState == ObjectWaiter::TS_WAIT) {
