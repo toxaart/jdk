@@ -1039,8 +1039,10 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
     }
 
     {
-      ClearSuccOnSuspend csos(this);
-      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, reenter_path /* allow_suspend */);
+      //ClearSuccOnSuspend csos(this);
+      //ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, reenter_path /* allow_suspend */);
+
+      ThreadBlockInVM tbvm(current, false);
       // park self
       if (do_timed_park) {
         current->_ParkEvent->park(recheck_interval);
@@ -1857,9 +1859,9 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     assert(current->thread_state() == _thread_in_vm, "invariant");
 
     {
-      //ThreadBlockInVM tbivm(current, false /* allow_suspend */);
-      ClearSuccOnSuspend csos(this);
-      ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, false /* allow_suspend */);
+      ThreadBlockInVM tbivm(current, false /* allow_suspend */);
+      //ClearSuccOnSuspend csos(this);
+      //ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, false /* allow_suspend */);
       if (interrupted || HAS_PENDING_EXCEPTION) {
         // Intentionally empty
       } else if (node.TState == ObjectWaiter::TS_WAIT) {
@@ -1894,6 +1896,12 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
         was_notified = false;
       }
     }
+
+    // Process suspend requests now if any, before posting the event.
+    if (node.TState != ObjectWaiter::TS_ENTER) {
+      ThreadBlockInVM tbvm(current, true);
+    }
+
     // The thread is now either off-list (TS_RUN),
     // or on the entry_list (TS_ENTER).
     // The Node's TState variable is stable from the perspective of this thread.
