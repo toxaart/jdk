@@ -83,6 +83,7 @@ class frame {
   // they use absolute addressing
   bool        _on_heap;  // This frame represents a frame on the heap.
   DEBUG_ONLY(int _frame_index;) // the frame index in a stack chunk; -1 when on a thread stack
+  DEBUG_ONLY(intptr_t* _origin;) // points to the stack where the frame used to reside before freezing
 
   // We use different assertions to allow for intermediate states (e.g. during thawing or relativizing the frame)
   void assert_on_heap() const  { assert(is_heap_frame(), "Using offset with a non-chunk frame"); }
@@ -299,6 +300,8 @@ class frame {
   // On other platforms, it is defined so that the stack area used by
   // this frame goes from real_fp() to sp().
   intptr_t* real_fp() const;
+
+  intptr_t* unreal_fp() const;
 
   // Deoptimization info, if needed (platform dependent).
   // Stored in the initial_info field of the unroll info, to be used by

@@ -469,7 +469,7 @@ private:
   static frame sender(const frame& f) { return f.is_interpreted_frame() ? sender<ContinuationHelper::InterpretedFrame>(f)
                                                                         : sender<ContinuationHelper::NonInterpretedUnknownFrame>(f); }
   template<typename FKind> static inline frame sender(const frame& f);
-  template<typename FKind> frame new_heap_frame(frame& f, frame& caller);
+  template<typename FKind> frame new_heap_frame(frame& f, frame& caller, intptr_t* origin);
   inline void set_top_frame_metadata_pd(const frame& hf);
   inline void patch_pd(frame& callee, const frame& caller);
   inline void patch_pd_unused(intptr_t* sp);
@@ -1243,7 +1243,7 @@ NOINLINE freeze_result FreezeBase::recurse_freeze_interpreted_frame(frame& f, fr
 
   DEBUG_ONLY(before_freeze_java_frame(f, caller, fsize, 0, is_bottom_frame);)
 
-  frame hf = new_heap_frame<ContinuationHelper::InterpretedFrame>(f, caller);
+  frame hf = new_heap_frame<ContinuationHelper::InterpretedFrame>(f, caller, stack_frame_top);
   _total_align_size += frame::align_wiggle; // add alignment room for internal interpreted frame alignment on AArch64/PPC64
 
   intptr_t* heap_frame_top = ContinuationHelper::InterpretedFrame::frame_top(hf, callee_argsize, callee_interpreted);
@@ -1298,7 +1298,7 @@ freeze_result FreezeBase::recurse_freeze_compiled_frame(frame& f, frame& caller,
 
   DEBUG_ONLY(before_freeze_java_frame(f, caller, fsize, argsize, is_bottom_frame);)
 
-  frame hf = new_heap_frame<ContinuationHelper::CompiledFrame>(f, caller);
+  frame hf = new_heap_frame<ContinuationHelper::CompiledFrame>(f, caller, stack_frame_top);
 
   intptr_t* heap_frame_top = ContinuationHelper::CompiledFrame::frame_top(hf, callee_argsize, callee_interpreted);
 
@@ -1337,7 +1337,7 @@ NOINLINE freeze_result FreezeBase::recurse_freeze_stub_frame(frame& f, frame& ca
   assert(result == freeze_ok, "should have caller");
   DEBUG_ONLY(before_freeze_java_frame(f, caller, fsize, 0, false /*is_bottom_frame*/);)
 
-  frame hf = new_heap_frame<ContinuationHelper::StubFrame>(f, caller);
+  frame hf = new_heap_frame<ContinuationHelper::StubFrame>(f, caller, stack_frame_top);
   intptr_t* heap_frame_top = ContinuationHelper::StubFrame::frame_top(hf);
 
   copy_to_chunk(stack_frame_top, heap_frame_top, fsize);
@@ -1378,7 +1378,7 @@ NOINLINE freeze_result FreezeBase::recurse_freeze_native_frame(frame& f, frame& 
   assert(result == freeze_ok, "should have caller frame");
   DEBUG_ONLY(before_freeze_java_frame(f, caller, fsize, argsize, false /* is_bottom_frame */);)
 
-  frame hf = new_heap_frame<ContinuationHelper::NativeFrame>(f, caller);
+  frame hf = new_heap_frame<ContinuationHelper::NativeFrame>(f, caller, stack_frame_top);
   intptr_t* heap_frame_top = ContinuationHelper::NativeFrame::frame_top(hf);
 
   copy_to_chunk(stack_frame_top, heap_frame_top, fsize);

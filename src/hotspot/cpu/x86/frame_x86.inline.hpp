@@ -94,6 +94,7 @@ inline frame::frame() {
   _oop_map = nullptr;
   _on_heap = false;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = nullptr;)
 }
 
 inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
@@ -104,6 +105,7 @@ inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
   _oop_map = nullptr;
   _on_heap = false;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = nullptr;)
 
   assert(pc != nullptr, "no pc?");
   _cb = CodeCache::find_blob(pc); // not fast because this constructor can be used on native frames
@@ -141,12 +143,13 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   assert(_cb != nullptr, "pc: " INTPTR_FORMAT, p2i(pc));
   _on_heap = false;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = nullptr;)
 
   setup(pc);
 }
 
 inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address pc, CodeBlob* cb,
-                    const ImmutableOopMap* oop_map, bool on_heap) {
+                    const ImmutableOopMap* oop_map, bool on_heap, intptr_t* origin) {
   _sp = sp;
   _unextended_sp = unextended_sp;
   _fp = fp;
@@ -156,6 +159,7 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   _deopt_state = not_deoptimized;
   _on_heap = on_heap;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = origin;)
 
   // In thaw, non-heap frames use this constructor to pass oop_map.  I don't know why.
   assert(_on_heap || _cb != nullptr, "these frames are always heap frames");
@@ -182,6 +186,7 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   assert(_cb != nullptr, "pc: " INTPTR_FORMAT " sp: " INTPTR_FORMAT " unextended_sp: " INTPTR_FORMAT " fp: " INTPTR_FORMAT, p2i(pc), p2i(sp), p2i(unextended_sp), p2i(fp));
   _on_heap = false;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = nullptr;)
 
   setup(pc);
 }
@@ -195,6 +200,7 @@ inline frame::frame(intptr_t* sp, intptr_t* fp) {
   _pc = (address)(sp[-1]);
   _on_heap = false;
   DEBUG_ONLY(_frame_index = -1;)
+  DEBUG_ONLY(_origin = nullptr;)
 
   // Here's a sticky one. This constructor can be called via AsyncGetCallTrace
   // when last_Java_sp is non-null but the pc fetched is junk.
@@ -232,7 +238,13 @@ inline bool frame::equal(frame other) const {
 // Return unique id for this frame. The id must have a value where we can distinguish
 // identity and younger/older relationship. null represents an invalid (incomparable)
 // frame. Should not be called for heap frames.
-inline intptr_t* frame::id(void) const { return real_fp(); }
+inline intptr_t* frame::id(void) const { 
+  if (!_on_heap) {
+    return real_fp(); 
+  } else {
+    return unreal_fp();
+  }
+}
 
 // Return true if the frame is older (less recent activation) than the frame represented by id
 inline bool frame::is_older(intptr_t* id) const   { assert(this->id() != nullptr && id != nullptr, "null frame id");
@@ -261,6 +273,11 @@ inline intptr_t* frame::real_fp() const {
   // else rely on fp()
   assert(! is_compiled_frame(), "unknown compiled frame size");
   return fp();
+}
+
+// to be called for frames residing in heap chunks
+inline intptr_t* frame::unreal_fp() const {
+  return _origin;
 }
 
 inline int frame::frame_size() const {
@@ -399,6 +416,29 @@ inline frame frame::sender(RegisterMap* map) const {
 
   // Calling frame::id() is currently not supported for heap frames.
   assert(result._on_heap || this->_on_heap || result.is_older(this->id()), "Must be");
+
+  intptr_t* result_id = result.id();
+  intptr_t* this_id = this->id();
+
+  if (!result._on_heap && !this->_on_heap) {
+      assert(result_id != nullptr, "both on stack, result id is null");
+      assert(this_id != nullptr, "both on stack, this id is null");
+  }
+
+  if (result._on_heap && !this->_on_heap) {
+      assert(result_id != nullptr, "result on heap, this on stack, result id is null");
+      assert(this_id != nullptr, "result on heap, this on stack, this id is null");
+  }
+
+  if (!result._on_heap && this->_on_heap) {
+      assert(result_id != nullptr, "result on stack, this on heap, result id is null");
+      assert(this_id != nullptr, "result on stack, this on heap, this id is null");   
+  }
+
+  if (result._on_heap && this->_on_heap) {
+      assert(result_id != nullptr, "both on heap, result id is null");
+      assert(this_id != nullptr, "both on heap, this id is null");   
+  }
 
   return result;
 }

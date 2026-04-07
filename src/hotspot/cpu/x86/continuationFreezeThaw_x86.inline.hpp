@@ -67,12 +67,12 @@ inline frame FreezeBase::sender(const frame& f) {
   CodeBlob* sender_cb = CodeCache::find_blob_and_oopmap(sender_pc, slot);
   return sender_cb != nullptr
     ? frame(sender_sp, sender_sp, *link_addr, sender_pc, sender_cb,
-            slot == -1 ? nullptr : sender_cb->oop_map_for_slot(slot, sender_pc), false)
+            slot == -1 ? nullptr : sender_cb->oop_map_for_slot(slot, sender_pc), false, nullptr)
     : frame(sender_sp, sender_sp, *link_addr, sender_pc);
 }
 
 template<typename FKind>
-frame FreezeBase::new_heap_frame(frame& f, frame& caller) {
+frame FreezeBase::new_heap_frame(frame& f, frame& caller, intptr_t* origin) {
   assert(FKind::is_instance(f), "");
   assert(!caller.is_interpreted_frame()
     || caller.unextended_sp() == (intptr_t*)caller.at(frame::interpreter_frame_last_sp_offset), "");
@@ -93,7 +93,7 @@ frame FreezeBase::new_heap_frame(frame& f, frame& caller) {
 
     assert(_cont.tail()->is_in_chunk(sp), "");
 
-    frame hf(sp, sp, fp, f.pc(), nullptr, nullptr, true /* on_heap */);
+    frame hf(sp, sp, fp, f.pc(), nullptr, nullptr, true /* on_heap */, origin);
     // copy relativized locals from the stack frame
     *hf.addr_at(frame::interpreter_frame_locals_offset) = locals_offset;
     return hf;
@@ -117,7 +117,7 @@ frame FreezeBase::new_heap_frame(frame& f, frame& caller) {
 
     assert(_cont.tail()->is_in_chunk(sp), "");
 
-    return frame(sp, sp, fp, f.pc(), nullptr, nullptr, true /* on_heap */);
+    return frame(sp, sp, fp, f.pc(), nullptr, nullptr, true /* on_heap */, origin);
   }
 }
 
@@ -299,7 +299,7 @@ template<typename FKind> frame ThawBase::new_stack_frame(const frame& hf, frame&
         ? frame_sp + fsize - frame::sender_sp_offset // fp always points to the address below the pushed return pc. We need correct address.
         : *(intptr_t**)(hf.sp() - frame::sender_sp_offset); // we need to re-read fp because it may be an oop and we might have fixed the frame.
     }
-    return frame(frame_sp, frame_sp, fp, hf.pc(), hf.cb(), hf.oop_map(), false); // TODO PERF : this computes deopt state; is it necessary?
+    return frame(frame_sp, frame_sp, fp, hf.pc(), hf.cb(), hf.oop_map(), false, nullptr); // TODO PERF : this computes deopt state; is it necessary?
   }
 }
 
