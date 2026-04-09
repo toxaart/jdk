@@ -1057,9 +1057,11 @@ bool ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
       }
     }
 
+#if 0
     if (reenter_path && current->is_suspended()) {
       return false;
     }
+#endif
 
     // Try again, but just so we distinguish between futile wakeups and
     // successful wakeups. The following test isn't algorithmically
@@ -2004,7 +2006,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       // This means the thread has been un-parked and added to the entry_list
       // in notify_internal, i.e. notified while waiting.
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
-#if 0
+#if 1
       ExitOnSuspend eos(this);
       { 
         assert( _waiters > 0, "invariant");
