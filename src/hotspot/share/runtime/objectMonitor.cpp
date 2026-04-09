@@ -1002,7 +1002,7 @@ bool ObjectMonitor::try_enter_fast(JavaThread* current, ObjectWaiter* current_no
   return false;
 }
 
-void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_node, bool reenter_path) {
+bool ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_node, bool reenter_path) {
   assert(current != nullptr, "invariant");
   //assert(current->thread_state() == _thread_blocked, "invariant");
   assert(current_node != nullptr, "invariant");
@@ -1055,6 +1055,10 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
       else {
         current->_ParkEvent->park();
       }
+    }
+
+    if (reenter_path && current->is_suspended()) {
+      return false;
     }
 
     // Try again, but just so we distinguish between futile wakeups and
@@ -1127,7 +1131,7 @@ void ObjectMonitor::enter_internal(JavaThread* current, ObjectWaiter* current_no
   // monitorexit.
 
   current_node->TState = ObjectWaiter::TS_RUN;
-  return;
+  return true;
 }
 
 // This method is called from two places:
@@ -1323,11 +1327,55 @@ void ObjectMonitor::entry_list_build_dll(JavaThread* current) {
 ObjectWaiter* ObjectMonitor::entry_list_tail(JavaThread* current) {
   assert(has_owner(current), "invariant");
   ObjectWaiter* w = _entry_list_tail;
-  if (w != nullptr) {
+  if (w != nullptr && (w->is_vthread() || !w->thread()->is_suspended())) {
     return w;
   }
   entry_list_build_dll(current);
   w = _entry_list_tail;
+
+#if 1
+
+  bool is_suspended = false;
+  if (!w->is_vthread()) {
+    JavaThread* t = w->thread();
+    assert(t != nullptr, "");
+    is_suspended = t->is_suspended();
+  } // for vthread is_suspended remains false
+
+  if (is_suspended) {
+    if (w->prev() == nullptr && w->next() == nullptr) {
+      // This is the only thread in the list, suspending it is okay.
+    } else {
+      ObjectWaiter* prev = nullptr;
+      while (true) {
+        prev = w->prev();
+        assert(prev != nullptr, "prev is null");
+
+        // now prev != nullptr
+        if (prev->is_vthread()) {
+          // vthread is ok to choose, it cannot be suspended
+          break;
+        }
+
+        // by this time we know prev is a platform thread
+        if (!prev->thread()->is_suspended()) {
+          // this is a good candidate, pick it.
+          break;
+        }
+
+        // we've reached the head, if it is suspended or not, does not matter
+        if (prev == _entry_list) {
+          break;
+        }
+        w = prev;
+      }
+      w = prev;
+      assert(w->is_vthread() || !w->thread()->is_suspended(), "invariant");
+    }  
+  }
+
+#endif
+
   assert(w != nullptr, "invariant");
   return w;
 }
@@ -1956,6 +2004,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
       // This means the thread has been un-parked and added to the entry_list
       // in notify_internal, i.e. notified while waiting.
       guarantee(v == ObjectWaiter::TS_ENTER, "invariant");
+#if 0
       ExitOnSuspend eos(this);
       { 
         assert( _waiters > 0, "invariant");
@@ -1978,6 +2027,27 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
         current->set_current_pending_monitor(nullptr);
         enter(current, false /* post_jvmti_events */);
       }
+#else
+      bool entered = false;
+      while (!entered) {
+        assert(_waiters > 0, "invariant");
+        OSThreadContendState osts(current->osthread());
+        entered = enter_internal(current, &node, true /* reenter_path */);
+        if (!entered) {
+           // The current thread is still on the entry_list, it can be suspended provided that
+           // the successor is picked so that it does not have an incoming suspension request.
+           // However, suspending the only thread on the entry list is ok, no deadlock, as noone is waiting.
+          assert(!has_owner(current), "invariant");
+          guarantee(node.TState == ObjectWaiter::TS_ENTER, "invariant");
+          assert(&node != _entry_list, "");
+
+          ClearSuccOnSuspend csos(this);
+          ThreadBlockInVMPreprocess<ClearSuccOnSuspend> tbivs(current, csos, true /* allow_suspend */);
+        } else {
+          current->set_current_pending_monitor(nullptr); // ???
+        }
+      }
+#endif
       assert(has_owner(current), "invariant");
       node.wait_reenter_end(this);
     }
