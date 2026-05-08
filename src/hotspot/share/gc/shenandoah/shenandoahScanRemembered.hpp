@@ -1,5 +1,6 @@
 /*
  * Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+ * Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -912,6 +913,12 @@ struct ShenandoahRegionChunk {
   ShenandoahHeapRegion* _r;      // The region of which this represents a chunk
   size_t _chunk_offset;          // HeapWordSize offset
   size_t _chunk_size;            // HeapWordSize qty
+
+  ShenandoahHeapRegion* region() const {
+    // This is a hint for the compiler to not consider the impossible path in debug builds
+    guarantee(_r != nullptr, "Chunk region must be set");
+    return _r;
+  }
 };
 
 // ShenandoahRegionChunkIterator divides the total remembered set scanning effort into ShenandoahRegionChunks

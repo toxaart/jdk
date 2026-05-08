@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -120,7 +120,11 @@ class HotSpotCompiledCodeStream : public ResourceObj {
   bool available() const;
 
   oop get_oop(int id, JVMCI_TRAPS) const;
-  JavaThread* thread() const { return _thread; }
+  JavaThread* thread() const {
+    // This is a hint for the compiler to not consider the impossible path in debug builds
+    DEBUG_ONLY(guarantee(_thread != nullptr, "Current thread must be set");)
+    return _thread;
+  }
 
   void set_virtual_objects(GrowableArray<ScopeValue*>* objs) { _virtual_objects = objs; }
   ScopeValue* virtual_object_at(int id, JVMCI_TRAPS) const;

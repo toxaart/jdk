@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2026, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -92,6 +92,8 @@ uintptr_t SafepointMechanism::compute_poll_word(bool armed, uintptr_t stack_wate
 }
 
 void SafepointMechanism::update_poll_values(JavaThread* thread) {
+  // This is a hint for the compiler to not consider the impossible path in debug builds
+  DEBUG_ONLY(guarantee(thread != nullptr, "Must be");)
   assert(thread == Thread::current(), "Must be");
   assert(thread->thread_state() != _thread_blocked, "Must not be");
   assert(thread->thread_state() != _thread_in_native, "Must not be");

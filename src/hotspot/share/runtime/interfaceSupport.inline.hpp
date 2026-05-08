@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2025, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2026, Oracle and/or its affiliates. All rights reserved.
  * Copyright (c) 2021, Azul Systems, Inc. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -108,6 +108,8 @@ class ThreadStateTransition : public StackObj {
   }
 
   static inline void transition_from_vm(JavaThread *thread, JavaThreadState to, bool check_asyncs = true) {
+    // This is a hint for the compiler to not consider the impossible path in debug builds
+    DEBUG_ONLY(guarantee(thread != nullptr, "Must be");)
     assert(thread->thread_state() == _thread_in_vm, "coming from wrong thread state");
     if (to == _thread_in_Java) {
       SafepointMechanism::process_if_requested_with_exit_check(thread, check_asyncs);
