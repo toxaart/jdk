@@ -190,11 +190,16 @@ do {                                                                            
   if (!invariant) {                                                                      \
     TOUCH_ASSERT_POISON;                                                                 \
     report_vm_error(__FILE__, __LINE__, "invariant_assume(" #p ") failed", __VA_ARGS__); \
+  } else {                                                                               \
+    COMPILER_ASSUME(invariant);                                                          \
   }                                                                                      \
-  COMPILER_ASSUME(invariant);                                                            \
 } while (0)
 #else
-#define invariant_assume(p, ...) ((void)0)
+#define invariant_assume(p, ...)
+do {
+  const bool invariant = (p);
+  COMPILER_ASSUME(invariant);
+} while (0)
 #endif
 
 #ifndef ASSERT
