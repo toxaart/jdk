@@ -190,8 +190,7 @@ do {                                                                            
   if (!invariant) {                                                                      \
     TOUCH_ASSERT_POISON;                                                                 \
     report_vm_error(__FILE__, __LINE__, "invariant_assume(" #p ") failed", __VA_ARGS__); \
-  }                                                                                      \
-  COMPILER_ASSUME(invariant);                                                            \
+  }                                                                                      \                                                     \
 } while (0)
 #else
 #define invariant_assume(p, ...) ((void)0)
