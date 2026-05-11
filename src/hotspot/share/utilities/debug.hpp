@@ -195,11 +195,11 @@ do {                                                                            
   }                                                                                      \
 } while (0)
 #else
-#define invariant_assume(p, ...)
-do {
-  const bool invariant = (p);
-  COMPILER_ASSUME(invariant);
-} while (0)
+#define invariant_assume(p, ...)                                                         \
+do {                                                                                     \
+  const bool invariant = (p);                                                            \
+  COMPILER_ASSUME(invariant);                                                            \
+} while (0)       
 #endif
 
 #ifndef ASSERT
